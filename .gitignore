@@ -1,0 +1,21 @@
+# Installed npm dependencies (package-lock.json stays tracked)
+node_modules/
+
+# VitePress build output, dependency cache and intermediate server bundles
+/docs/.vitepress/dist/
+/docs/.vitepress/cache/
+/docs/.vitepress/.temp/
+
+# Temporary bundled VitePress configuration and TypeScript build metadata
+/docs/.vitepress/config.*.timestamp-*.mjs
+*.tsbuildinfo
+
+# npm diagnostic logs
+npm-debug.log*
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Local assessment document (existing exclusion)
+/W1_DOC_CENTER_GAP_ANALYSIS.md
