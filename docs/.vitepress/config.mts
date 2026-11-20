@@ -26,6 +26,7 @@ const chapters: { title: [string, string]; pages: Entry[] }[] = [
     title: ["认识 W1", "Product guide"],
     pages: [
       ["产品概览", "Overview", "product/overview"],
+      ["能力与应用", "Capabilities and applications", "product/capabilities"],
       ["型号与规格", "Models and specifications", "product/specifications"],
       ["部件与接口", "Components and ports", "product/interfaces"],
     ],
@@ -38,12 +39,19 @@ const chapters: { title: [string, string]; pages: Entry[] }[] = [
     title: ["SDK 开发", "SDK guides"],
     pages: [
       ["集成 SDK", "SDK integration", "sdk/integration"],
+      ["可运行示例", "Runnable examples", "sdk/examples"],
+      ["Python 示例", "Python example", "sdk/python-example"],
+      ["C++ 示例", "C++ example", "sdk/cpp-example"],
+      ["W1 ROS 2 接口示例", "W1 ROS 2 interface example", "sdk/ros2-example"],
       ["读取状态示例", "Read device state", "sdk/read-state"],
     ],
   },
   {
     title: ["API 参考", "API reference"],
-    pages: [["公共接口", "Public interfaces", "api/reference"]],
+    pages: [
+      ["公共接口", "Public interfaces", "api/reference"],
+      ["W1 整机控制", "W1 whole-body control", "api/w1-control"],
+    ],
   },
   {
     title: ["版本与支持", "Releases and support"],
@@ -101,6 +109,9 @@ export default defineConfig({
   title: "W1 Documentation",
   lang: defaultLang === "zh" ? "zh-CN" : "en",
   locales: { zh: locale("zh"), en: locale("en") },
+  markdown: {
+    theme: { light: "light-plus", dark: "dark-plus" },
+  },
   transformPageData(page) {
     if (page.relativePath === "index.md")
       return {

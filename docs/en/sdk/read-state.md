@@ -2,6 +2,8 @@
 
 > Template note: this is a read-only example template. Keep "read-only" in the title only after confirming that the operations cannot actuate the device. Use real public API names and verification results for each version.
 
+The [W1 ROS 2 example](./ros2-example.md) implements the actual read-only interfaces: it reads the right elbow angle from `/joint_states` and queries PVT status. For Python and C++ language demonstrations, see [runnable examples](./examples.md). This page remains a template for other SDK read methods and delivery-version details.
+
 ## Scope
 
 **Data read**　[To fill: exact state fields, units, and update frequency]

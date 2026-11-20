@@ -1,21 +1,50 @@
-> Template note: replace each [To fill] field with information approved for publication and backed by a source. Keep unverified details marked as pending; do not guess. Remove this note and all incomplete fields before publication.
+# Models and specifications
+
+This page lists W1 reference parameters and the ROS 2 configuration documented in this manual. Official specifications, measurement methods and operating conditions remain to be confirmed.
 
 ## Identify a model
 
-| Public model ID     | Hardware revision   | Where to check                             | Difference from other models                             |
-| ------------------- | ------------------- | ------------------------------------------ | -------------------------------------------------------- |
-| [To fill: model ID] | [To fill: revision] | [To fill: label location or lookup method] | [To fill: difference affecting selection or integration] |
+| Identifier                     | Available information                                                | Still needed                                                                                           |
+| ------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Product name                   | Speedbot W1, also written Weldroid-W1                                | Official model designation, naming rules, and corresponding hardware revision                          |
+| Physical identification        | No nameplate or annotated component diagram in the supplied material | Nameplate location, model/revision lookup method, and differences between configurations               |
+| ROS 2 configuration identifier | This manual's interface documentation uses `speed_W1_v1.2`           | Mapping from this software model to the public product model, specific hardware, and firmware versions |
 
-## Technical specifications
+For software configuration and discovery commands, see [W1 whole-body control](../api/w1-control.md).
 
-Use separate rows when a value depends on the configuration. Include the test conditions and how the value was determined.
+## Reference body parameters
 
-| Parameter                 | Value or range             | Unit            | Applicable configuration     | Conditions and notes                                         |
-| ------------------------- | -------------------------- | --------------- | ---------------------------- | ------------------------------------------------------------ |
-| [To fill: parameter name] | [To fill: value or bounds] | [To fill: unit] | [To fill: model and options] | [To fill: rated, limiting, or measured value and conditions] |
+These reference values have not been mapped to a hardware revision and are not verified specifications for `speed_W1_v1.2`.
 
-## Conditions of use
+| Parameter                     | Reference value            | Unit | Conditions and notes                                                                                     |
+| ----------------------------- | -------------------------- | ---- | -------------------------------------------------------------------------------------------------------- |
+| Robot form                    | Full-size bipedal humanoid | —    | Intended for complex welding workstations such as shipbuilding                                           |
+| Height                        | Approximately 1.7          | m    | Measurement posture and definition are not given                                                         |
+| Whole-body degrees of freedom | 27                         | —    | Joint distribution is not given; this differs from the software configuration below                      |
+| Single-arm payload            | 10                         | kg   | Posture, reach, duration, and whether this is a rated or limiting value are not given                    |
+| Whole-robot payload           | 30                         | kg   | Payload definition and test conditions are not given; do not infer combined arm payload from this figure |
 
-[To fill: published limits relevant to selecting equipment, connecting accessories, or preparing the operating environment. Specify the model for each limit.]
+Official specifications and operating conditions still require confirmation by the product owner.
 
-Locate the corresponding component on the device. [Components and interfaces](./interfaces.md)
+## 27 degrees of freedom and 28 controlled joints
+
+| Scope                                       | Count                                           | Meaning for developers                                                                                     |
+| ------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Product reference parameters                | 27 whole-body degrees of freedom                | A per-joint breakdown and hardware-version mapping remain to be confirmed                                  |
+| `speed_W1_v1.2` ROS 2 control configuration | 28 controlled joints: 14 legs/waist and 14 arms | This configuration determines command ordering and array lengths; its whole-body PVT message has 84 values |
+
+The relationship between these counts or versions is **pending confirmation**; the current material does not explain the difference. For integration, check the running `robot_model` and `joints` parameters and the installed configuration. Do not change command lengths using the reference degree-of-freedom count. The complete 28-joint order and PVT format are in [W1 whole-body control](../api/w1-control.md).
+
+## Parameters and conditions still needed
+
+| Category                       | Missing from the supplied material                                                                            |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| Welding accuracy and quality   | Welding accuracy, repeatability, weld-quality metrics, and test methods                                       |
+| Welding process and throughput | Welding speed, supported process range, continuous-operation capability, and conditions                       |
+| Mobility                       | Walking speed, maximum obstacle height, climbing capability, and test conditions                              |
+| Power and endurance            | Battery specifications, runtime, charging time, and test load                                                 |
+| Operating environment          | Ingress protection, operating temperature/humidity, explosion-protection rating, and applicable conditions    |
+| Sensing                        | Sensor models, measurement ranges, resolution, and calibration requirements                                   |
+| Motion limits                  | Hardware-specific joint position/velocity/torque limits, workspace, and posture-dependent payload constraints |
+
+These fields remain pending; values cannot be derived from capability descriptions. For application scenarios, working postures, and perception, see [Capabilities and applications](./capabilities.md). Missing physical-location and connection information is listed in [Components and interfaces](./interfaces.md).

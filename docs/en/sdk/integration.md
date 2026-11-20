@@ -4,6 +4,8 @@
 
 ## Integration details
 
+The [W1 ROS 2 example](./ros2-example.md) and [whole-body control reference](../api/w1-control.md) cover `speed_W1_v1.2` (28 joints, two seven-joint arms) for an existing W1 Humble workspace. SDK download locations, exact versions, and firmware combinations in the template below still need to be supplied.
+
 | Field                   | Value                                                                      |
 | ----------------------- | -------------------------------------------------------------------------- |
 | SDK name and version    | [To fill: public name and exact version]                                   |

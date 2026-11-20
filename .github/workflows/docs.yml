@@ -13,6 +13,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  examples:
+    uses: ./.github/workflows/examples.yml
+    permissions:
+      contents: read
+
   configure:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
@@ -27,7 +32,7 @@ jobs:
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
   deploy:
-    needs: configure
+    needs: [configure, examples]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     environment:

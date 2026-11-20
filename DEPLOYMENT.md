@@ -18,7 +18,7 @@ DOCS_PLATFORM=local DOCS_BASE=/ DOCS_DEFAULT_LANG=zh python3 scripts/verify_site
 
 ## GitHub Pages
 
-`.github/workflows/docs.yml` 在 `main` 分支收到 push 时自动执行 `npm ci`、构建、站点校验，并将 `docs/.vitepress/dist/` 发布到 GitHub Pages。也可以在仓库的 **Actions → Build and deploy documentation → Run workflow** 手动触发；该工作流只对 `main` 发布。
+`.github/workflows/docs.yml` 在 `main` 分支收到 push 时先调用 `examples.yml` 验证 Python、C++ 和 ROS 2 示例；通过后执行 `npm ci`、源码引用检查、构建及站点校验，并将 `docs/.vitepress/dist/` 发布到 GitHub Pages。也可以在仓库的 **Actions → Build and deploy documentation → Run workflow** 手动触发；该工作流只对 `main` 发布。`examples.yml` 也在 Pull Request 上执行示例测试。
 
 目标仓库是 [speedbot-embodied-robot/w1_sdk](https://github.com/speedbot-embodied-robot/w1_sdk)。首次发布前，在仓库的 [Settings → Pages](https://github.com/speedbot-embodied-robot/w1_sdk/settings/pages) 将 **Build and deployment → Source** 设为 **GitHub Actions**。截至 2026-11-20 本次检查，Pages 尚未启用；未配置时工作流会在读取 Pages 配置这一步失败，完成设置后可在 Actions 中重新运行。
 

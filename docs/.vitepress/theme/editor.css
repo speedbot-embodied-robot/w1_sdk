@@ -1,0 +1,152 @@
+/* VS Code-style source panels. Native VitePress tabs and copy controls stay active. */
+:root {
+  --w1-editor-bg: #ffffff;
+  --w1-editor-tabs: #f3f3f3;
+  --w1-editor-border: #d8d8d8;
+  --w1-editor-text: #333333;
+  --w1-editor-muted: #646464;
+  --w1-editor-accent: #007acc;
+  --w1-editor-gutter: #f8f8f8;
+}
+
+.dark {
+  --w1-editor-bg: #1e1e1e;
+  --w1-editor-tabs: #252526;
+  --w1-editor-border: #3c3c3c;
+  --w1-editor-text: #d4d4d4;
+  --w1-editor-muted: #9d9d9d;
+  --w1-editor-accent: #4daafc;
+  --w1-editor-gutter: #1e1e1e;
+}
+
+.vp-doc .vp-code-group {
+  --vp-code-block-bg: var(--w1-editor-bg);
+  --vp-code-block-color: var(--w1-editor-text);
+  --vp-code-line-height: 24px;
+  --vp-code-font-size: 13px;
+  --vp-font-family-mono:
+    "Cascadia Code", Consolas, "SFMono-Regular", Menlo, monospace;
+  margin: 24px 0;
+  border: 1px solid var(--w1-editor-border);
+  border-radius: 6px;
+  background: var(--w1-editor-bg);
+}
+
+.vp-doc .vp-code-group .tabs {
+  margin: 0;
+  padding: 0 48px 0 0;
+  min-height: 44px;
+  border-radius: 5px 5px 0 0;
+  background: var(--w1-editor-tabs);
+  box-shadow: inset 0 -1px var(--w1-editor-border);
+}
+
+.vp-doc .vp-code-group .tabs label {
+  flex-shrink: 0;
+  padding: 0 16px;
+  border-right: 1px solid var(--w1-editor-border);
+  border-bottom: 0;
+  line-height: 44px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--w1-editor-muted);
+}
+
+.vp-doc .vp-code-group .tabs label::before {
+  content: "‹›";
+  margin-right: 8px;
+  color: var(--w1-editor-accent);
+  font-weight: 600;
+}
+
+.vp-doc .vp-code-group .tabs input:checked + label {
+  background: var(--w1-editor-bg);
+  color: var(--w1-editor-text);
+}
+
+.vp-doc .vp-code-group .tabs input:checked + label::after {
+  top: 0;
+  right: 0;
+  bottom: auto;
+  left: 0;
+  height: 2px;
+  border-radius: 0;
+  background: var(--w1-editor-accent);
+}
+
+.vp-doc .vp-code-group .tabs input:focus-visible + label {
+  outline: 2px solid var(--w1-editor-accent);
+  outline-offset: -3px;
+}
+
+.vp-doc .vp-code-group div[class*="language-"] {
+  margin: 0;
+  border-radius: 0 0 5px 5px;
+  overflow: visible;
+  background: var(--w1-editor-bg);
+}
+
+.vp-doc .vp-code-group div.line-numbers-mode {
+  padding-left: 48px;
+}
+
+.vp-doc .vp-code-group pre {
+  padding: 16px 0;
+  border-radius: 0 0 5px 0;
+}
+
+.vp-doc .vp-code-group code {
+  padding: 0 20px;
+  font-variant-ligatures: none;
+}
+
+.vp-doc .vp-code-group .line-numbers-wrapper {
+  padding-top: 16px;
+  width: 48px;
+  border-color: var(--w1-editor-border);
+  border-radius: 0 0 0 5px;
+  background: var(--w1-editor-gutter);
+  color: var(--w1-editor-muted);
+  user-select: none;
+  pointer-events: none;
+}
+
+.vp-doc .vp-code-group [class*="language-"] > span.lang {
+  display: none;
+}
+
+.vp-doc .vp-code-group [class*="language-"] > button.copy {
+  top: -40px;
+  right: 5px;
+  width: 36px;
+  height: 36px;
+  opacity: 1;
+  border-color: transparent;
+  background-color: var(--w1-editor-tabs);
+  background-size: 18px;
+}
+
+.vp-doc .vp-code-group [class*="language-"] > button.copy:focus-visible {
+  outline: 2px solid var(--w1-editor-accent);
+  outline-offset: -2px;
+}
+
+.vp-doc .vp-code-group [class*="language-"] > button.copy.copied::before {
+  height: 36px;
+}
+
+@media (max-width: 639px) {
+  .vp-doc .vp-code-group .tabs label {
+    padding: 0 12px;
+  }
+  .vp-doc .vp-code-group div.line-numbers-mode {
+    padding-left: 40px;
+  }
+  .vp-doc .vp-code-group .line-numbers-wrapper {
+    width: 40px;
+  }
+  .vp-doc .vp-code-group code {
+    padding: 0 12px;
+  }
+}
