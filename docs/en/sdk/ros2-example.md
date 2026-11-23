@@ -42,12 +42,12 @@ The expected model is `speed_W1_v1.2`, with `mit_controller` active and planning
 
 The direction below is from the external application's perspective: subscribe to receive.
 
-| Topic                                                 | Message type                          | Fields and units                                                                                                                                                           | Availability                                                                                               |
-| ----------------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `/joint_states`                                       | `sensor_msgs/msg/JointState`          | Match `name[i]` to `position[i]` (rad), `velocity[i]` (rad/s), and `effort[i]` (N·m, interpretation depends on driver mapping); `header.stamp` is the message timestamp    | Mock and hardware; select controlled joints by name and ignore extra passive joints or passive-only frames |
-| `/imu/data`                                           | `sensor_msgs/msg/Imu`                 | `frame_id=base_link`; quaternion x/y/z/w, angular velocity rad/s and acceleration m/s²; W1 broadcaster already applies mounting rotation                                   | Hardware FSS broadcaster; default mock does not produce this hardware stream                               |
-| `/motor_temperature_broadcaster/dynamic_joint_states` | `control_msgs/msg/DynamicJointState`  | Find the joint in `joint_names`, then match `interface_names` to `values`: `initialized`, `controller_owned`, `status_word`, `error_code` and configured temperature items | W1 hardware, currently configured at 10 Hz                                                                 |
-| `/diagnostics`                                        | `diagnostic_msgs/msg/DiagnosticArray` | `status[].name/level/message/values`; inspect EtherCAT aggregate and bus items, then locate the affected joints                                                            | Hardware status monitoring enabled; check bus OK and individual joint ownership separately                 |
+| Topic                                                 | Message type                          | Fields and units                                                                                                                                                        | Availability                                                                                               |
+| ----------------------------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `/joint_states`                                       | `sensor_msgs/msg/JointState`          | Match `name[i]` to `position[i]` (rad), `velocity[i]` (rad/s), and `effort[i]` (N·m, interpretation depends on driver mapping); `header.stamp` is the message timestamp | Mock and hardware; select controlled joints by name and ignore extra passive joints or passive-only frames |
+| `/imu/data`                                           | `sensor_msgs/msg/Imu`                 | `header.frame_id` is `base_link` in the W1 v1.2 configuration; `orientation` quaternion x/y/z/w, `angular_velocity` (rad/s), `linear_acceleration` (m/s²)               | W1 hardware FSS IMU broadcaster; default mock does not provide this hardware stream                        |
+| `/motor_temperature_broadcaster/dynamic_joint_states` | `control_msgs/msg/DynamicJointState`  | Read by joint and interface name; common interfaces include `status_word`, `error_code`, `motor_temperature` (°C), `drive_temperature` (°C), and `bus_voltage` (V)      | W1 hardware state broadcaster, configured at 10 Hz; fields vary by drive support                           |
+| `/diagnostics`                                        | `diagnostic_msgs/msg/DiagnosticArray` | Standard `status[]` summary: `name`, `level`, `message`, `hardware_id`, and key-value `values[]`                                                                        | W1 hardware with hardware status monitoring started; default mock does not provide hardware diagnostics    |
 
 Joint and IMU readers can use sensor-data QoS. Inspect actual publication rate, QoS and hardware stream availability on the running system:
 
@@ -56,6 +56,23 @@ ros2 topic info /joint_states -v
 ros2 topic hz /joint_states
 ros2 topic echo /imu/data --once --qos-reliability best_effort
 ```
+
+### Read-only IMU and motor diagnostics
+
+In a terminal with the W1 workspace sourced, inspect the topics and message types before reading one sample:
+
+```bash
+ros2 topic list -t
+ros2 topic type /imu/data
+ros2 topic info /imu/data -v
+ros2 topic echo /imu/data --once --qos-reliability best_effort
+ros2 topic echo /motor_temperature_broadcaster/dynamic_joint_states --once
+ros2 topic echo /diagnostics --once
+```
+
+In `DynamicJointState`, `joint_names[i]` maps to `interface_values[i]`. Inside that entry, `interface_names[j]` maps to `values[j]`. Look up names rather than assuming a fixed array order. `status_word` and `error_code` are raw drive status values; their meanings depend on the drive model and its public definitions. Not every drive exposes every temperature or voltage interface.
+
+Use `/diagnostics` for aggregate status. To identify an individual joint, combine it with that joint's entry in `dynamic_joint_states`. The IMU covariance fields are present, but the current publisher does not provide calibrated covariance; consumers should not treat zero-filled values as calibrated uncertainty.
 
 ### JointState and QoS
 

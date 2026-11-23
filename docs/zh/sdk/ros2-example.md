@@ -42,12 +42,12 @@ ros2 service call /mit_controller/get_pvt_interpolation_status std_srvs/srv/Trig
 
 下表方向以外部应用为视角，均为订阅接收。
 
-| 话题                                                  | 消息类型                              | 字段与单位                                                                                                                                        | 可用条件                                                           |
-| ----------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `/joint_states`                                       | `sensor_msgs/msg/JointState`          | 按 `name[i]` 关联 `position[i]`（rad）、`velocity[i]`（rad/s）、`effort[i]`（N·m，含义取决于驱动映射）；`header.stamp` 为消息时间                 | mock、真机；按名提取受控轴，忽略被动脚趾等附加关节或仅含被动轴的帧 |
-| `/imu/data`                                           | `sensor_msgs/msg/Imu`                 | `frame_id=base_link`；四元数 x/y/z/w、角速度 rad/s、加速度 m/s²；W1 broadcaster 已做安装旋转换算                                                  | 真机 FSS broadcaster；默认 mock 不提供这路硬件数据                 |
-| `/motor_temperature_broadcaster/dynamic_joint_states` | `control_msgs/msg/DynamicJointState`  | 按 `joint_names` 找轴，再按对应 `interface_names` 读取 `values`，含 `initialized`、`controller_owned`、`status_word`、`error_code` 和配置的温度项 | W1 真机，当前配置 10 Hz                                            |
-| `/diagnostics`                                        | `diagnostic_msgs/msg/DiagnosticArray` | `status[].name/level/message/values`；先查 EtherCAT 聚合项及总线项，再按轴定位                                                                    | 已启用硬件状态监控；总线 OK 与逐轴接管需分别检查                   |
+| 话题                                                  | 消息类型                              | 字段与单位                                                                                                                                   | 可用条件                                                           |
+| ----------------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `/joint_states`                                       | `sensor_msgs/msg/JointState`          | 按 `name[i]` 关联 `position[i]`（rad）、`velocity[i]`（rad/s）、`effort[i]`（N·m，含义取决于驱动映射）；`header.stamp` 为消息时间            | mock、真机；按名提取受控轴，忽略被动脚趾等附加关节或仅含被动轴的帧 |
+| `/imu/data`                                           | `sensor_msgs/msg/Imu`                 | `header.frame_id` 在 W1 v1.2 配置中为 `base_link`；`orientation` 四元数 x/y/z/w、`angular_velocity`（rad/s）、`linear_acceleration`（m/s²）  | W1 真机 FSS IMU broadcaster；默认 mock 不提供这路硬件数据          |
+| `/motor_temperature_broadcaster/dynamic_joint_states` | `control_msgs/msg/DynamicJointState`  | 按关节名和接口名读取；常见状态接口包括 `status_word`、`error_code`、`motor_temperature`（°C）、`drive_temperature`（°C）、`bus_voltage`（V） | W1 真机状态 broadcaster；当前配置 10 Hz，具体字段因驱动支持而异    |
+| `/diagnostics`                                        | `diagnostic_msgs/msg/DiagnosticArray` | 标准 `status[]` 摘要：`name`、`level`、`message`、`hardware_id` 和键值 `values[]`                                                            | W1 真机且硬件状态监控已启动；默认 mock 不提供硬件诊断              |
 
 关节和 IMU 读端可用传感器 QoS。实际发布频率、QoS 和硬件数据是否存在，应在运行系统中检查：
 
@@ -56,6 +56,23 @@ ros2 topic info /joint_states -v
 ros2 topic hz /joint_states
 ros2 topic echo /imu/data --once --qos-reliability best_effort
 ```
+
+### IMU 与电机诊断只读查看
+
+在已加载 W1 工作区的终端中，先确认话题和消息类型，再读取一帧：
+
+```bash
+ros2 topic list -t
+ros2 topic type /imu/data
+ros2 topic info /imu/data -v
+ros2 topic echo /imu/data --once --qos-reliability best_effort
+ros2 topic echo /motor_temperature_broadcaster/dynamic_joint_states --once
+ros2 topic echo /diagnostics --once
+```
+
+`DynamicJointState` 中 `joint_names[i]` 对应 `interface_values[i]`；该项里的 `interface_names[j]` 再对应 `values[j]`。按名称查找，不要假设关节或接口的数组顺序固定。`status_word` 和 `error_code` 是驱动状态数值；具体含义以对应驱动型号及其公开定义为准。并非每种驱动都提供全部温度或电压接口。
+
+`/diagnostics` 用于读取聚合状态；需要定位到单个关节时，再结合 `dynamic_joint_states` 的逐关节数据。IMU 消息的协方差字段也可读取；当前发布端未提供标定协方差，消费端不应把零值当作已标定的不确定度。
 
 ### JointState 与 QoS
 
