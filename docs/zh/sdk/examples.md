@@ -22,4 +22,4 @@ Python 和 C++ 是两个独立示例，不包含跨语言绑定。ROS 2 示例�
 
 ## 接入真实 W1
 
-W1 `speed_W1_v1.2` 的 ROS 2 接口见 [W1 ROS 2 示例](./ros2-example.md)和 [W1 整机控制参考](../api/w1-control.md)。SDK 安装与交付版本信息仍由 [SDK 集成](./integration.md)维护；其他 SDK 读取方式可补充到[读取状态模板](./read-state.md)。在线接入前核对已安装配置、运行机型、ROS 域和端点 QoS。
+W1 `speed_W1_v1.2` 的 ROS 2 接口见 [W1 ROS 2 示例](./ros2-example.md)和 [W1 整机控制参考](../api/w1-control.md)。SDK 安装与交付版本信息仍由 [SDK 集成](./integration.md)维护。在线接入前核对已安装配置、运行机型、ROS 域和端点 QoS。
