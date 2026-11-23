@@ -16,6 +16,8 @@ For software configuration and discovery commands, see [W1 whole-body control](.
 
 These reference values have not been mapped to a hardware revision and are not verified specifications for `speed_W1_v1.2`.
 
+![W1 mechanical structure diagram](../../images/mechanical.png)
+
 | Parameter                     | Reference value            | Unit | Conditions and notes                                                                                     |
 | ----------------------------- | -------------------------- | ---- | -------------------------------------------------------------------------------------------------------- |
 | Robot form                    | Full-size bipedal humanoid | —    | Intended for complex welding workstations such as shipbuilding                                           |

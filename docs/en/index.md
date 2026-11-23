@@ -5,6 +5,9 @@ hero:
   name: W1
   text: Developer documentation
   tagline: Product information, application capabilities, and ROS 2 interfaces
+  image:
+    src: /images/front.jpg
+    alt: Speedbot W1 humanoid welding robot
   actions:
     - theme: brand
       text: Quick start

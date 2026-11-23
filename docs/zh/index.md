@@ -5,6 +5,9 @@ hero:
   name: 视比特焊接机器人Weldroid-W1
   text: 开发者文档中心
   tagline: 产品资料、作业能力与 ROS 2 开发接口
+  image:
+    src: /images/front.jpg
+    alt: 视比特 W1 人形焊接机器人
   actions:
     - theme: brand
       text: 快速开始
