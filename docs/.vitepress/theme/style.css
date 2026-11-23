@@ -71,3 +71,6 @@
 .vp-doc td {
   vertical-align: top;
 }
+.vp-doc table {
+  width: 100%;
+}
