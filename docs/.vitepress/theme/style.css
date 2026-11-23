@@ -74,3 +74,9 @@
 .vp-doc table {
   width: 100%;
 }
+.vp-doc img[src*="perception"] {
+  display: block;
+  width: min(100%, 397px);
+  height: auto;
+  margin: 16px auto;
+}

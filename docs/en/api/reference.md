@@ -2,7 +2,7 @@
 
 > Template note: document only symbols approved for public use. Complete one section per API. Do not describe internal implementation, unpublished headers, or guessed behavior as a contract.
 
-## API scope
+# API scope
 
 For W1 ROS 2 command formats, the 28-joint order, and PVT sessions, see [W1 whole-body control](./w1-control.md). State, planning, teaching, and welding calls are covered in the [W1 ROS 2 example](../sdk/ros2-example.md). Use the template below for additional SDK symbols and exact release versions.
 
