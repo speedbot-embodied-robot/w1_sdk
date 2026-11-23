@@ -82,7 +82,11 @@ The subscription uses Humble's `qos_profile_sensor_data`: `BEST_EFFORT`, `VOLATI
 
 See the official ROS [JointState definition](https://github.com/ros2/common_interfaces/blob/humble/sensor_msgs/msg/JointState.msg) and [Humble QoS profiles](https://github.com/ros2/rmw/blob/humble/rmw/include/rmw/qos_profiles.h) for the standard contracts.
 
-`header.stamp` is the acquisition time. This example limits waiting with a monotonic clock, but does not reject stale acquisition timestamps. A paused simulation `/clock` cannot leave it waiting indefinitely. The node demonstrates interface reads; it does not establish feedback freshness for motion or provide real-time control guarantees.
+`header.stamp` represents the state-recording time by message semantics and comes from the publisher; it may be zero. This example limits waiting with a monotonic clock, but does not reject stale timestamps. A paused simulation `/clock` cannot leave it waiting indefinitely. The node demonstrates interface reads; it does not establish feedback freshness for motion or provide real-time control guarantees.
+
+### Record continuous joint feedback
+
+To save multiple `/joint_states` frames for offline analysis, use the [Python JSONL recording example](./python-example.md). The recorder preserves each message's name order, state arrays, `header.stamp`, and `frame_id`, and adds local monotonic elapsed time. Empty state arrays remain `[]`. It only subscribes and writes a file; it publishes no control command. Its purpose differs from `state_reader`: that node reads one named joint and queries PVT status, while the recorder saves complete feedback frames without querying PVT.
 
 ## Read-only node: joint feedback and PVT status
 
@@ -233,6 +237,8 @@ ros2 service call /weld_vision/capture_and_generate speedbot_msgs/srv/CaptureWel
 ```
 
 ## Verification and troubleshooting
+
+The isolated communication tests on this page use separate ROS endpoints to check `state_reader` and the joint feedback recorder. They do not start the W1 mock or simulate a controller or hardware. See the [Python recording example](./python-example.md) for recorder parameters, JSONL format and file behavior.
 
 Testing this repository's read-only client does not require W1 drivers. With Humble sourced, build and source `w1_docs_ros2` as above, then run from the repository root:
 

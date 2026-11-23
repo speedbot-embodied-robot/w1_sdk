@@ -1,79 +1,87 @@
-# Python：读取和校验关节状态
+# Python：录制 W1 关节反馈
 
-这个可运行示例从本地 JSON 文件读取两组**模拟旋转关节**状态，校验后将结果写到标准输出。它用于测试 Python 代码展示、数据边界和命令行调用，不连接机器人，也不代表 W1 的真实关节名称、SDK 接口或运动范围。
+这个示例使用 ROS 2 Humble 订阅 W1 的 `/joint_states`，将收到的反馈按 JSON Lines 格式保存到本地文件。它适合保存一段状态数据供离线排查或分析；只订阅状态，不发布控制命令，也不启动机器人。
 
-## 环境与运行
+## 环境
 
-要求 Python **3.10 或以上**，只用标准库，无需 pip 安装。已在 Linux、Python 3.10.12 上验证。下面的命令在仓库根目录执行：
+需要 Ubuntu 22.04、Python 3.10 和 ROS 2 Humble。录制包使用 `rclpy`、`sensor_msgs`，随仓库的 `w1_docs_ros2` 一起构建；连接 W1 时还需加载已构建的 W1 工作区。安装环境、ROS 域和网络发现准备方式见 [W1 ROS 2 接口示例](./ros2-example.md)。
+
+从仓库根目录执行。先加载 ROS 2 Humble；连接 W1 时，再加载与控制器匹配的工作区并沿用控制器实际使用的 ROS 域。跨电脑通信需让两端都允许网络发现，例如设置 `ROS_LOCALHOST_ONLY=0`。
 
 ```bash
-python3 examples/python/read_state.py
-python3 examples/python/read_state.py examples/python/joint_state.json
+source /opt/ros/humble/setup.bash
+# 连接 W1 时，先加载控制器工作区
+# source /path/to/w1_ws/install/setup.bash
+
+colcon --log-base examples/ros2/log build \
+  --base-paths examples/ros2/src \
+  --build-base examples/ros2/build \
+  --install-base examples/ros2/install \
+  --packages-select w1_docs_ros2
+source examples/ros2/install/local_setup.bash
 ```
 
-成功时退出码是 `0`，stdout 是一行 JSON，包含两个关节；`demo_joint_1` 的位置为 `0.25 rad`、速度为 `0.1 rad/s`。stderr 为空。
+## 录制
 
-不传文件参数时，脚本读取自己所在目录中的 `joint_state.json`，因此也可以在其他工作目录通过脚本的绝对路径运行。显式传入的相对文件路径则相对于当前工作目录解析。
+选择一个尚不存在的输出文件，然后运行：
 
-## 输入数据与约定
+```bash
+ros2 run w1_docs_ros2 record_joint_states --ros-args \
+  -p output_path:=/tmp/w1-joint-states.jsonl \
+  -p duration_seconds:=10.0 \
+  -p timeout_seconds:=5.0
+```
 
-文件为 UTF-8 JSON。以下内容直接引用 `examples/python/joint_state.json`，中英文页面共享这一份输入：
+节点默认订阅 `/joint_states`，录制 10 秒；如果启动后 5 秒没有收到有效消息，或有效消息间隔超过 5 秒，就以超时退出。`output_path` 默认是当前目录下的 `joint_states.jsonl`。文件以独占方式新建，已存在时拒绝覆盖；更换路径或文件名后重试。
+
+## JSONL 内容
+
+文件第一行是格式元数据，后续每行对应一条收到的 `sensor_msgs/msg/JointState`：
+
+| 字段                             | 含义                                                                      |
+| -------------------------------- | ------------------------------------------------------------------------- |
+| `record_type`、`schema_version`  | 行类型和本地文件格式版本；元数据行为 `metadata`，反馈行为 `joint_state`   |
+| `topic`、`message_type`          | 实际订阅的话题名与 ROS 消息类型，位于元数据行；默认话题为 `/joint_states` |
+| `elapsed_seconds`                | 从录制开始计时到收到该帧的单调时钟经过时间                                |
+| `stamp.sec`、`stamp.nanosec`     | 消息携带的 ROS 采集时间字段，由发布者填写，可能为零；不替换为本机接收时刻 |
+| `frame_id`                       | 原消息的坐标系标记                                                        |
+| `name`                           | 关节名称数组                                                              |
+| `position`、`velocity`、`effort` | 按 ROS 消息原样保存的状态数组；没有该项数据时保留为空数组 `[]`            |
+
+数组按各自相同索引与 `name` 对应。录制器要求 `name` 非空且名称唯一；`position`、`velocity`、`effort` 各自可以为空，非空时长度必须与 `name` 一致，数值须为有限值。没有某类状态时保留 `[]`，不补零或转成 `null`；三组状态数组都为空时也会按原消息保存。应按关节名匹配，不要假设反馈排列等于控制命令中的 28 轴顺序。元数据注明转动关节与移动关节各字段单位；消息本身不含关节类型，解释数据时需结合实际机器人模型。`header.stamp` 由发布者填写，可能为零；本工具不验证时间新鲜度，也无法判断上游或 DDS 是否丢帧，只会保存本节点实际收到的消息。
+
+订阅使用 ROS 2 Humble 的 `qos_profile_sensor_data`（`BEST_EFFORT`、`VOLATILE`、`KEEP_LAST`，depth 5），需与发布端 QoS 兼容。该配置不保证无丢帧，录制文件不应被视为完整、无损的控制器日志。
+
+录制器源码：
 
 ::: code-group
-<<< ../../../examples/python/joint_state.json{json:line-numbers}
+<<< ../../../examples/ros2/src/w1_docs_ros2/w1_docs_ros2/record_joint_states.py{python:line-numbers}
 :::
 
-| 字段              | 类型与单位       | 约束                                       |
-| ----------------- | ---------------- | ------------------------------------------ |
-| 根对象的 `joints` | 数组             | 必填且非空；根对象不接受其他字段           |
-| 每项的 `name`     | 字符串           | 必填、非空、无首尾空白；同一文件内不得重复 |
-| `position_rad`    | JSON 数字，rad   | 必填、有限值，读入后转为 Python `float`    |
-| `velocity_rad_s`  | JSON 数字，rad/s | 必填、有限值，读入后转为 Python `float`    |
+## 参数与退出码
 
-每个关节只接受表中的三个字段。重复 JSON 字段、布尔值、数字字符串、`null`、`NaN`、`Infinity` 和浮点溢出均被拒绝。数值零和负值可以使用。示例没有物理限位、时间戳或新鲜度检查；实际接入时必须依据设备的真实数据契约补充，不能将“格式有效”当作“可控制设备”。
+| 参数               | 默认值               | 用途                                                     |
+| ------------------ | -------------------- | -------------------------------------------------------- |
+| `output_path`      | `joint_states.jsonl` | 输出路径；相对路径以当前工作目录为基准，文件必须尚不存在 |
+| `duration_seconds` | `10.0`               | 从录制开始计时计算的最长时长                             |
+| `timeout_seconds`  | `5.0`                | 等待首帧或两条有效帧之间的最长间隔                       |
 
-## 完整 Python 源码
+| 退出码 | 含义                                                  |
+| ------ | ----------------------------------------------------- |
+| `0`    | 到达录制时长且已记录数据                              |
+| `2`    | 参数错误、消息无效，或输出文件已存在                  |
+| `3`    | 收到首帧前超时、连续数据超时，或录制时长内无数据      |
+| `4`    | 录制队列或文件 I/O 错误，包括无法创建、写入或冲刷文件 |
+| `130`  | Ctrl+C；已收到的记录会尝试冲刷到文件                  |
 
-源码只维护在 `examples/python/read_state.py`。修改该文件会同步改变两种语言页面中的代码块。
+此工具只负责留存 ROS 状态，不检查控制器是否 ready、不验证反馈是否足够新鲜，也不代表设备可以安全运动。要单次读取指定关节并同时查询 PVT 状态，请用 [ROS 2 只读节点](./ros2-example.md#只读节点-关节反馈与-pvt-状态)。
 
-::: code-group
-<<< ../../../examples/python/read_state.py{python:line-numbers}
-:::
+## 隔离测试
 
-## Python 特性与接口
-
-`JointState` 是 `frozen=True, slots=True` 的 dataclass：声明的字段便于阅读，实例不支持普通字段赋值；`load_states()` 返回不可变 tuple，适合把一次解析后的快照传给其他代码。
-
-类型注解不会执行运行时校验，因此加载器逐项检查输入。尤其 Python 中 `bool` 是 `int` 的子类，代码用 `type(value)` 明确拒绝布尔值。JSON 可以包含超出浮点表示范围的整数或指数，转换时的溢出和非有限值也会被处理。
-
-| 接口                                   | 输入               | 返回或异常                                                                                               |
-| -------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------- |
-| `load_states(path: Path)`              | 文件路径           | `tuple[JointState, ...]`；输入不符时抛 `ValueError`，文件读取失败抛 `OSError`，解码失败抛 `UnicodeError` |
-| `main(argv: list[str] \| None = None)` | 可选命令行参数列表 | 返回 CLI 退出码；`argparse` 自身的帮助或参数错误可抛 `SystemExit`                                        |
-
-文件通过 `with` 自动关闭；解析是同步的、一次性读入内存，适合小型快照。`if __name__ == "__main__"` 让导入模块不会执行命令行。库函数的异常由调用者处理，CLI 则将错误转换为 stderr 和退出码。`asdict()` 配合 `json.dumps(..., allow_nan=False)` 输出明确的 JSON，不依赖 dataclass 的调试字符串。
-
-`JointState` 构造器本身不验证外部数据；应通过 `load_states()` 获得经过校验的快照。该示例是独立 Python 实现，没有 C++ 扩展绑定，也没有 ROS 2 运行时依赖。
-
-## 失败行为与测试
-
-| 退出码 | stdout / stderr | 场景                                         |
-| ------ | --------------- | -------------------------------------------- |
-| `0`    | JSON / 空       | 读取和校验成功                               |
-| `2`    | 空 / 诊断信息   | JSON 或字段非法；命令行参数错误也使用 `2`    |
-| `3`    | 空 / 诊断信息   | 文件不存在、无权限、无法读取或不是有效 UTF-8 |
-
-`--help` 打印帮助并返回 `0`，不读取数据。可以指定一个不存在的文件检查错误通道：
+仓库的隔离 ROS 测试使用本机独立发布端验证只读状态客户端与录制器文件输出；`state_reader` 测试另使用 Trigger 服务替身。不连接 W1 控制器。录制器覆盖多帧 JSONL、remap 后的话题元数据、数组保留、无数据超时、超时前后首帧、拒绝覆盖、无效帧和中断冲刷。构建环境后，从仓库根目录执行：
 
 ```bash
-python3 examples/python/read_state.py missing-state.json
-echo $?
+ROS_LOCALHOST_ONLY=1 ROS_DOMAIN_ID=169 python3 examples/ros2/test_cli.py
 ```
 
-当文件不存在时，预期退出码为 `3`。完整行为测试包含不可变性、缺失和多余字段、空输入、重复字段和名称、布尔值、非有限值、溢出、损坏 JSON、错误编码，以及从其他目录调用 CLI：
-
-```bash
-python3 -m unittest discover -s examples/python -p 'test_*.py' -v
-```
-
-下一步：[C++ 示例](./cpp-example.md) · [ROS 2 接口示例](./ros2-example.md) · [SDK 集成模板](./integration.md)
+169 是本机测试域；若已被占用，请换成空闲域。测试替身只验证客户端与文件录制行为，不模拟 W1 控制器或其硬件。录制器接入真实或另行运行的测试发布端前，确认 ROS 域和网络发现设置正确。

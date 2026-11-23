@@ -82,7 +82,11 @@ ros2 topic echo /diagnostics --once
 
 标准定义可查阅 ROS 官方的 [JointState 消息](https://github.com/ros2/common_interfaces/blob/humble/sensor_msgs/msg/JointState.msg)和 [Humble QoS profiles](https://github.com/ros2/rmw/blob/humble/rmw/include/rmw/qos_profiles.h)。
 
-`header.stamp` 是采集时间；本例用单调时钟限制等待，并未检查采集时间是否过旧。仿真 `/clock` 暂停不会让等待无限持续。该节点用于接口读取，不提供运动前的反馈新鲜度验收或实时控制保证。
+`header.stamp` 按消息语义表示状态记录时间，由发布者提供，可能为零；本例用单调时钟限制等待，并未检查该时间戳是否新鲜。仿真 `/clock` 暂停不会让等待无限持续。该节点用于接口读取，不提供运动前的反馈新鲜度验收或实时控制保证。
+
+### 录制连续关节反馈
+
+需要保存多帧 `/joint_states` 供离线分析时，使用 [Python JSONL 录制示例](./python-example.md)。录制器保留每条消息的名称顺序、状态数组、`header.stamp` 和 `frame_id`，并记录本地单调时钟经过时间；空状态数组保留为 `[]`。它只订阅并写文件，不发布控制命令。录制器与下方 `state_reader` 用途不同：`state_reader` 单次提取指定关节并查询 PVT 状态，录制器保存完整的连续反馈，不查询 PVT。
 
 ## 只读节点：关节反馈与 PVT 状态
 
@@ -234,6 +238,8 @@ ros2 service call /weld_vision/capture_and_generate speedbot_msgs/srv/CaptureWel
 
 ## 验证与排查
 
+本页的隔离通信测试使用独立 ROS 端点验证 `state_reader` 与关节反馈录制器，不启动 W1 mock，也不模拟控制器或硬件。录制器的参数、JSONL 格式和文件行为见 [Python 录制示例](./python-example.md)。
+
 仅验证本仓库只读客户端时，无需 W1 驱动包。加载 Humble、构建并 source 本页的 `w1_docs_ros2` 安装后，从仓库根目录执行：
 
 ```bash
@@ -260,9 +266,3 @@ ROS_LOCALHOST_ONLY=1 ROS_DOMAIN_ID=169 python3 examples/ros2/test_cli.py
 python3 -c 'from speedbot_msgs.srv import PlanMove; print(PlanMove.Request.get_fields_and_field_types())'
 ros2 service type /plan_move
 ```
-
-## 资料与验证范围
-
-接口资料为本仓库 `tmp/W1_ROS2通讯接口示例.md`、`tmp/整机控制接口README.md`，W1 专文约定优先。原文 2026-11-20 的验证记录为：W1 无界面 mock 读到右肘 0.0000 rad、PVT `waiting`；只规划请求成功并产生 183 个轨迹点；100 Hz 回放通过离线检查，Teach/Capture 校验了消息字段。**这是来源记录，不是本次文档集成重新运行的结果**，轨迹点数也不是固定值。来源未进行实机运动、相机采集和焊接执行验证。
-
-本仓库测试覆盖示例客户端与文档构建；完整 W1 联调需在已交付的对应工作区中进行。后续可在 [SDK 集成](./integration.md)补充精确软件版本、固件组合和设备部署记录。

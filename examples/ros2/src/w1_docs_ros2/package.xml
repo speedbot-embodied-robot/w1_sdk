@@ -2,7 +2,7 @@
 <package format="3">
   <name>w1_docs_ros2</name>
   <version>0.1.0</version>
-  <description>Read W1 joint feedback and query the PVT status service.</description>
+  <description>Read and record W1 joint feedback without sending control commands.</description>
   <maintainer email="jouyang@speedbot.com">W1 documentation maintainers</maintainer>
   <license>MIT</license>
   <buildtool_depend>ament_python</buildtool_depend>

@@ -1,7 +1,6 @@
 name: Test runnable examples
 
 on:
-  pull_request:
   workflow_dispatch:
   workflow_call:
 
@@ -9,14 +8,14 @@ permissions:
   contents: read
 
 jobs:
-  python-cpp:
+  cpp-and-source:
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Build and test standalone examples
+      - name: Test C++ example and source references
         run: python3 scripts/test_examples.py
 
   ros2:
@@ -37,7 +36,7 @@ jobs:
         run: |
           apt-get update
           apt-get install --yes --no-install-recommends python3-colcon-common-extensions python3-pytest ros-humble-sensor-msgs ros-humble-std-srvs
-      - name: Build and test the W1 reader against isolated endpoints
+      - name: Build and test the W1 reader and recorder against isolated endpoints
         working-directory: examples/ros2
         run: |
           source /opt/ros/humble/setup.bash

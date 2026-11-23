@@ -1,6 +1,7 @@
 name: Build and deploy documentation
 
 on:
+  pull_request:
   push:
     branches: [main]
   workflow_dispatch:
@@ -18,6 +19,29 @@ jobs:
     permissions:
       contents: read
 
+  site:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Build and verify the bilingual site
+        env:
+          DOCS_PLATFORM: github
+          DOCS_BASE: /w1_sdk/
+          DOCS_DEFAULT_LANG: en
+        run: |
+          npm run docs:build
+          npm run docs:verify
+
   configure:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
@@ -32,7 +56,7 @@ jobs:
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
   deploy:
-    needs: [configure, examples]
+    needs: [configure, examples, site]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     environment:

@@ -42,7 +42,7 @@ echo $?
 
 位置数组在本例中是必填项。ROS 2 的 `JointState` 允许部分数组为空，所以对接时必须根据业务需求决定如何转换，不能把本例校验规则当成 ROS 消息的全部定义。见 [ROS 2 示例](./ros2-example.md)。
 
-下面的头文件直接导入 `examples/cpp/include/w1_docs/joint_state.hpp`；中文和英文引用同一个文件。
+下面的头文件直接导入 `examples/cpp/include/w1_docs/joint_state.hpp`。
 
 ::: code-group
 <<< ../../../examples/cpp/include/w1_docs/joint_state.hpp{cpp:line-numbers}

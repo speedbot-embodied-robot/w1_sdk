@@ -57,3 +57,11 @@ ROS 2 容器使用 ros:humble-ros-base 标签，系统依赖由 apt 安装；发
 cpp_example 子代理只读复核了 VitePress 的复制按钮 DOM 依赖、标签切换与行号布局。保留原生控件顺序、active 状态和 pre 横向滚动，没有添加会干扰复制的标题节点。
 
 构建通过，24 处共享导入与 32 页站内链接通过。Chrome 实际检查 ROS 2 的多文件标签切换，并截获 clipboard.writeText 参数确认内容等于当前代码文本，不含文件标签和行号。检查浅色、深色桌面和 390px 手机视口，复制按钮处于标题栏，页面无横向溢出，长行在代码区域内滚动。系统剪贴板权限没有作为测试前提。改动尚未推送。
+
+## W1 反馈录制器更新
+
+日期：2026-11-23。移除低价值的本地 JSON Python mock（examples/python/read_state.py 及输入、测试），改为通过 ROS 2 Humble 只读订阅 W1 /joint_states 并录制 JSONL。原有 state_reader 保留，用于按名称单次读取关节并查询 PVT 状态；C++ 校验示例仍使用合成数据。
+
+录制器保存实际解析后的 topic、消息原数组、publisher 提供的 header.stamp 和 frame_id。回调验证后将记录放入有界队列，单独写线程按序输出；使用 monotonic 时钟控制时长和无数据超时，输出文件独占创建，已有文件不会覆盖。它只记录到达本节点的反馈，不验证时间戳新鲜度，不保证 DDS 无丢帧，也不发送控制命令。
+
+验证：Humble colcon build 通过，7 项 ROS 消息契约测试和 18 项隔离 CLI 测试通过；覆盖 remap 元数据、多帧与空数组、超时、迟到帧、paused sim clock、拒绝覆盖及 SIGINT 收尾。C++ 3 项 CTest、独立 consumer、9 项源码引用校验也通过。根路径和 /w1_sdk/ 文档构建、36 页链接验证均通过。隔离端点不代表 W1 真机验证；队列溢出和写盘故障没有专门注入测试。

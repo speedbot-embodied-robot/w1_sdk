@@ -50,6 +50,10 @@ Python 和 C++ 原有独立语言示例保留；用户修改的产品首页与�
 
 本次未运行 W1 mock 控制器、Planner、Teach、相机采集或真机运动。原资料记录的右肘 0.0000 rad、PVT `waiting`、183 个规划点等结果在页面中明确归属原记录。新增云端 CI 尚未执行，修改未提交或推送。
 
+## 后续 Python 反馈录制器
+
+2026-11-23：Python 示例已从本地 JSON 读取改为 ROS 2 只读订阅 /joint_states，录制状态为 JSONL；state_reader 继续负责单轴状态与 PVT 查询。录制器实现、隔离测试与双语教程见 [示例实现与验证记录](./EXAMPLES.md)。本次 Humble colcon build、7 项契约测试和 18 项 CLI 测试通过，未连接真机。
+
 输入文档 SHA-256（原文未修改）：
 
 - `tmp/W1_ROS2通讯接口示例.md`：`cc782ac2c87b122b30349376be874b21d54351351d5a7e54ff7e73e5a8644116`

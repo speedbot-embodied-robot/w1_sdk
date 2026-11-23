@@ -1,16 +1,16 @@
 # Runnable examples
 
-The Python and C++ examples use synthetic joint state to demonstrate language features and execution. The ROS 2 example now follows the supplied W1 interface documentation: it reads joint feedback, queries PVT status, and explains planning, teaching, and welding calls.
+The Python example subscribes to W1's `/joint_states` topic with ROS 2 Humble and records feedback as JSONL. The C++ example uses synthetic state to demonstrate language and library interfaces. The ROS 2 guide also covers a single-joint read, PVT status queries, and planning, teaching, and welding interfaces.
 
-| Example                       | Input and output                                        | Focus                                                               | Environment                                                                                |
-| ----------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| [Python](./python-example.md) | Read JSON, validate it, and emit structured output      | Type hints versus runtime checks, immutable data, exceptions, CLI   | Python 3.10+, standard library                                                             |
-| [C++](./cpp-example.md)       | Construct typed state and validate it through a library | RAII, ownership, explicit errors, separate library and caller       | C++17, CMake                                                                               |
-| [W1 ROS 2](./ros2-example.md) | Read `/joint_states` and query PVT status               | Joint-name matching, QoS, asynchronous services, timeouts, shutdown | ROS 2 Humble, rclpy, sensor_msgs, std_srvs; online integration also needs the W1 workspace |
+| Example                       | Input and output                                            | Focus                                                                          | Environment                                                                  |
+| ----------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| [Python](./python-example.md) | Subscribe to `/joint_states` and record feedback as JSONL   | ROS 2 subscriptions, message-array semantics, acquisition time, file recording | Python 3.10, ROS 2 Humble, rclpy, sensor_msgs, std_srvs; W1 workspace for W1 |
+| [C++](./cpp-example.md)       | Construct synthetic state and validate it through a library | RAII, ownership, explicit errors, separate library and caller                  | C++17, CMake                                                                 |
+| [W1 ROS 2](./ros2-example.md) | Read one joint and query PVT status                         | Joint-name matching, QoS, asynchronous services, timeouts, shutdown            | ROS 2 Humble, rclpy, sensor_msgs, std_srvs; W1 workspace for integration     |
 
 ## Suggested order
 
-Run Python and C++ first to check your language toolchains, then build the read-only ROS 2 client. With a W1 workspace installed, connect to an isolated W1 mock to read feedback and PVT status. A standard Humble installation can run the repository tests for client communication and error handling. Those endpoint fixtures do not implement a W1 controller.
+Build the ROS 2 package as described on the Python page, then run the recorder against an active W1 `/joint_states` publisher. Without a W1 environment, you can run the C++ example and the isolated-endpoint tests described in the ROS 2 guide. Those tests exercise client communication with test endpoints; they do not run a W1 controller or simulate hardware.
 
 Python and C++ are independent implementations, with no language binding. The ROS 2 example uses the Python client library; the ROS message type defines the contract between nodes written in different languages.
 
@@ -20,6 +20,6 @@ Each page imports real source files from the repository examples/ directory. Bot
 
 Rebuild after changing source files to update the displayed code. Maintain parameter descriptions, commands, and behavioral explanations in both languages separately. This website serves static documentation; run examples on your development machine or in CI.
 
-## Connecting real W1 hardware
+## Connecting W1
 
 For `speed_W1_v1.2`, see the [W1 ROS 2 example](./ros2-example.md) and [W1 whole-body control reference](../api/w1-control.md). Maintain installation and delivery versions in [SDK integration](./integration.md). Check the installed configuration, running model, ROS domain, and endpoint QoS before connecting.
