@@ -26,9 +26,9 @@ features:
   - title: SDK development
     details: Integrate the SDK in a verified environment and run a published example.
     link: ./sdk/integration
-  - title: API and releases
-    details: Find public interfaces, compatibility, and changes by SDK version.
-    link: ./api/reference
+  - title: W1 whole-body control
+    details: Review joint order, units, sessions, and whole-body command restrictions.
+    link: ./api/w1-control
 ---
 
 This manual provides product information and software integration guidance for W1 developers.
@@ -43,7 +43,6 @@ Measurement conditions and version mappings for product reference values still n
 
 - [Product overview](./product/overview.md) · [Capabilities and applications](./product/capabilities.md) · [Models and specifications](./product/specifications.md) · [Components and ports](./product/interfaces.md)
 - [SDK integration](./sdk/integration.md) · [Release notes](./support/releases.md)
-- [API reference](./api/reference.md)
 - [W1 ROS 2 example](./sdk/ros2-example.md) · [W1 whole-body control](./api/w1-control.md)
 
 Support channel: [To fill: public contact route, scope, and response expectations]

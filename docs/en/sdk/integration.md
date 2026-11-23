@@ -39,4 +39,4 @@ Before integrating, confirm the device model, firmware version, and running `spe
 | Success result | [To fill: output or state actually observed]             |
 | Exit           | [To fill: how to stop the program and release resources] |
 
-Continue with the [W1 ROS 2 interface example](./ros2-example.md) and [public API reference](../api/reference.md).
+Continue with the [W1 ROS 2 interface example](./ros2-example.md) and [W1 whole-body control reference](../api/w1-control.md).

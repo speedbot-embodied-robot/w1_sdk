@@ -44,7 +44,6 @@ const chapters: { title: [string, string]; pages: Entry[] }[] = [
   {
     title: ["API 参考", "API reference"],
     pages: [
-      ["公共接口", "Public interfaces", "api/reference"],
       ["W1 整机控制", "W1 whole-body control", "api/w1-control"],
     ],
   },

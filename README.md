@@ -31,7 +31,7 @@ npm run docs:preview
 
 ## 内容模板
 
-页面按中英文成对维护，路由位于 `docs/zh/` 和 `docs/en/`。内容负责人从[产品概览](./docs/zh/product/overview.md)、[SDK 集成](./docs/zh/sdk/integration.md)及[API 参考](./docs/zh/api/reference.md)开始填写。完整输入清单见[资料收集模板](./templates/PRODUCT_CONTENT_INTAKE.md)。
+页面按中英文成对维护，路由位于 `docs/zh/` 和 `docs/en/`。内容负责人从[产品概览](./docs/zh/product/overview.md)、[SDK 集成](./docs/zh/sdk/integration.md)开始填写。完整输入清单见[资料收集模板](./templates/PRODUCT_CONTENT_INTAKE.md)。
 
 [产品概览](./docs/zh/product/overview.md)、[型号与规格](./docs/zh/product/specifications.md)、[部件与接口](./docs/zh/product/interfaces.md)已补入公开资料，新增[能力与应用](./docs/zh/product/capabilities.md)介绍移动、感知、焊接、分层控制概念及带日期的应用阶段。集成与缺项记录见 [产品资料集成](./engineering/W1_PRODUCT_CONTENT_INTEGRATION.md)。
 

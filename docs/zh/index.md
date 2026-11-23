@@ -26,9 +26,9 @@ features:
   - title: SDK 开发
     details: 按已验证的环境完成 SDK 接入，并运行公开示例。
     link: ./sdk/integration
-  - title: API 与版本
-    details: 按 SDK 版本查找公开接口、兼容范围和变更记录。
-    link: ./api/reference
+  - title: W1 整机控制
+    details: 查看关节顺序、单位、会话和整机控制限制。
+    link: ./api/w1-control
 ---
 
 本手册面向 W1 开发者，提供产品信息和软件接入文档。
@@ -43,7 +43,6 @@ features:
 
 - [产品概览](./product/overview.md) · [能力与应用](./product/capabilities.md) · [型号与规格](./product/specifications.md) · [部件与接口](./product/interfaces.md)
 - [SDK 集成](./sdk/integration.md) · [发行说明](./support/releases.md)
-- [API 参考](./api/reference.md)
 - [W1 ROS 2 示例](./sdk/ros2-example.md) · [W1 整机控制](./api/w1-control.md)
 
 支持渠道：【待支持团队填写：公开服务入口、适用范围和响应方式】

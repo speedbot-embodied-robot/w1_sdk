@@ -39,4 +39,4 @@
 | 成功结果 | 【待填写：实际观察到的输出或状态】   |
 | 退出方式 | 【待填写：结束程序并释放资源的方法】 |
 
-继续查看 [W1 ROS 2 接口示例](./ros2-example.md) 和[公开 API 参考](../api/reference.md)。
+继续查看 [W1 ROS 2 接口示例](./ros2-example.md) 和[W1 整机控制参考](../api/w1-control.md)。
