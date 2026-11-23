@@ -5,8 +5,7 @@ const platform =
   (process.env.GITHUB_ACTIONS === "true" ? "github" : "local");
 if (!["local", "github", "domestic", "gitee"].includes(platform))
   throw new Error("Unknown DOCS_PLATFORM");
-const defaultLang =
-  process.env.DOCS_DEFAULT_LANG ?? (platform === "github" ? "en" : "zh");
+const defaultLang = process.env.DOCS_DEFAULT_LANG ?? "zh";
 if (!["zh", "en"].includes(defaultLang))
   throw new Error("DOCS_DEFAULT_LANG must be zh or en");
 const prefix = (process.env.DOCS_BASE ?? "").trim().replace(/^\/+|\/+$/g, "");
@@ -43,15 +42,11 @@ const chapters: { title: [string, string]; pages: Entry[] }[] = [
   },
   {
     title: ["API 参考", "API reference"],
-    pages: [
-      ["W1 整机控制", "W1 whole-body control", "api/w1-control"],
-    ],
+    pages: [["W1 整机控制", "W1 whole-body control", "api/w1-control"]],
   },
   {
     title: ["版本与支持", "Releases and support"],
-    pages: [
-      ["发行说明", "Release notes", "support/releases"],
-    ],
+    pages: [["发行说明", "Release notes", "support/releases"]],
   },
 ];
 

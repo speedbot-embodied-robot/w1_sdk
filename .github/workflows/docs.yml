@@ -37,7 +37,7 @@ jobs:
         env:
           DOCS_PLATFORM: github
           DOCS_BASE: /w1_sdk/
-          DOCS_DEFAULT_LANG: en
+          DOCS_DEFAULT_LANG: zh
         run: |
           npm run docs:build
           npm run docs:verify
@@ -85,7 +85,7 @@ jobs:
         env:
           DOCS_PLATFORM: github
           DOCS_BASE: ${{ needs.configure.outputs.base_path }}
-          DOCS_DEFAULT_LANG: ${{ vars.DOCS_DEFAULT_LANG || 'en' }}
+          DOCS_DEFAULT_LANG: zh
         run: |
           npm run docs:build
           python3 scripts/verify_site.py

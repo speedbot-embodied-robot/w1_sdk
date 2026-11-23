@@ -24,7 +24,7 @@ DOCS_PLATFORM=local DOCS_BASE=/ DOCS_DEFAULT_LANG=zh python3 scripts/verify_site
 
 工作流从 GitHub Pages 配置读取 base path。此项目站点默认使用 `/w1_sdk/`；未配置自定义域名时，发布成功后的预期地址为 `https://speedbot-embodied-robot.github.io/w1_sdk/`。用户站点或配置了自定义域名的站点通常使用 `/`。站点标题在 `docs/.vitepress/config.mts` 中维护，自定义域名在仓库 Pages 设置中配置。以成功工作流的 deployment 地址为准。
 
-GitHub Pages 构建默认语言为英文。可以在 **Settings → Secrets and variables → Actions → Variables** 添加 `DOCS_DEFAULT_LANG`，值设为 `en` 或 `zh`。改动变量后需重新运行工作流。两个语言目录始终都可访问，默认语言只影响站点根入口。
+GitHub Pages 根入口默认跳转到中文；英文页面仍可通过 `/en/` 访问。默认语言在 `.github/workflows/docs.yml` 中设置为 `zh`，`docs/.vitepress/config.mts` 也以中文作为未指定语言时的默认值。两个语言目录始终都可访问，默认语言只影响站点根入口。
 
 ## 国内服务器与 Nginx
 
