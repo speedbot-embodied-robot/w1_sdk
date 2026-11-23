@@ -32,10 +32,6 @@ const chapters: { title: [string, string]; pages: Entry[] }[] = [
     ],
   },
   {
-    title: ["快速开始", "Getting started"],
-    pages: [["首次接入", "First connection", "guide/quick-start"]],
-  },
-  {
     title: ["SDK 开发", "SDK guides"],
     pages: [
       ["集成 SDK", "SDK integration", "sdk/integration"],
@@ -43,7 +39,6 @@ const chapters: { title: [string, string]; pages: Entry[] }[] = [
       ["Python 示例", "Python example", "sdk/python-example"],
       ["C++ 示例", "C++ example", "sdk/cpp-example"],
       ["W1 ROS 2 接口示例", "W1 ROS 2 interface example", "sdk/ros2-example"],
-      ["读取状态示例", "Read device state", "sdk/read-state"],
     ],
   },
   {
@@ -56,13 +51,7 @@ const chapters: { title: [string, string]; pages: Entry[] }[] = [
   {
     title: ["版本与支持", "Releases and support"],
     pages: [
-      ["兼容性", "Compatibility", "support/compatibility"],
       ["发行说明", "Release notes", "support/releases"],
-      [
-        "故障排查与支持",
-        "Troubleshooting and support",
-        "support/troubleshooting",
-      ],
     ],
   },
 ];

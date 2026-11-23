@@ -10,8 +10,8 @@ hero:
     alt: 视比特 W1 人形焊接机器人
   actions:
     - theme: brand
-      text: 快速开始
-      link: ./guide/quick-start
+      text: SDK 集成
+      link: ./sdk/integration
     - theme: alt
       text: 了解产品
       link: ./product/overview
@@ -42,9 +42,8 @@ features:
 ## 文档目录
 
 - [产品概览](./product/overview.md) · [能力与应用](./product/capabilities.md) · [型号与规格](./product/specifications.md) · [部件与接口](./product/interfaces.md)
-- [首次接入](./guide/quick-start.md) · [SDK 集成](./sdk/integration.md) · [读取状态示例](./sdk/read-state.md)
-- [API 参考](./api/reference.md) · [兼容性](./support/compatibility.md) · [发行说明](./support/releases.md)
+- [SDK 集成](./sdk/integration.md) · [发行说明](./support/releases.md)
+- [API 参考](./api/reference.md)
 - [W1 ROS 2 示例](./sdk/ros2-example.md) · [W1 整机控制](./api/w1-control.md)
-- [故障排查](./support/troubleshooting.md)
 
 支持渠道：【待支持团队填写：公开服务入口、适用范围和响应方式】

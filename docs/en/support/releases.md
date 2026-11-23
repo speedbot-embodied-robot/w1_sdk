@@ -24,4 +24,4 @@ This page records public SDK or firmware releases. Do not list unpublished build
 
 **Upgrade notes**　[To fill: migration steps and compatibility impact; confirm before saying that no special steps are required]
 
-Check [compatibility](./compatibility.md) before upgrading. For problems, see [troubleshooting](./troubleshooting.md).
+Record the applicable model, firmware, and development environment before upgrading. Detailed troubleshooting guidance remains pending.

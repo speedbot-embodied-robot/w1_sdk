@@ -2,7 +2,7 @@
 
 # Troubleshooting
 
-First identify the device model, firmware, SDK version, and development environment. Check [compatibility](./compatibility.md) and review setup steps in the [quick start](../guide/quick-start.md).
+First identify the device model, firmware, SDK version, and development environment, then review setup steps in the [quick start](../guide/quick-start.md).
 
 ## Troubleshoot by symptom
 
@@ -25,4 +25,4 @@ First identify the device model, firmware, SDK version, and development environm
 - [ ] Record the device model, firmware, and SDK version.
 - [ ] Record the operating system, architecture, and reproduction steps.
 - [ ] Keep relevant error details and remove serial numbers, network addresses, credentials, and other sensitive data.
-- [ ] Check [compatibility](./compatibility.md) and the applicable [release history](./releases.md).
+- [ ] Check the device model, firmware, SDK version, and applicable [release history](./releases.md).

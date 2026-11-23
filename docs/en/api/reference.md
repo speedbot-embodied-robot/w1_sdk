@@ -13,7 +13,7 @@ For W1 ROS 2 command formats, the 28-joint order, and PVT sessions, see [W1 whol
 | Public languages               | [To fill: languages and versions covered here]                                       |
 | Definition location            | [To fill: public header, module, or message-definition path and repository revision] |
 
-See [SDK integration](../sdk/integration.md) for dependencies and initialization. For a first read, see [Read device state](../sdk/read-state.md).
+See [SDK integration](../sdk/integration.md) for dependencies and initialization. For state reads, see the [W1 ROS 2 example](../sdk/ros2-example.md).
 
 ## API: {public symbol name}
 
@@ -45,7 +45,7 @@ See [SDK integration](../sdk/integration.md) for dependencies and initialization
 
 ### Usage example
 
-[To fill: link to a same-version, verified [usage example](../sdk/read-state.md) and state which API behavior it covers.]
+[To fill: link to a same-version, verified [usage example](../sdk/ros2-example.md) and state which API behavior it covers.]
 
 ### Behavior checks
 

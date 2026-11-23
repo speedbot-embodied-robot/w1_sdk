@@ -22,4 +22,4 @@ Rebuild after changing source files to update the displayed code. Maintain param
 
 ## Connecting real W1 hardware
 
-For `speed_W1_v1.2`, see the [W1 ROS 2 example](./ros2-example.md) and [W1 whole-body control reference](../api/w1-control.md). Maintain installation and delivery versions in [SDK integration](./integration.md); other SDK read methods can use the [read state template](./read-state.md). Check the installed configuration, running model, ROS domain, and endpoint QoS before connecting.
+For `speed_W1_v1.2`, see the [W1 ROS 2 example](./ros2-example.md) and [W1 whole-body control reference](../api/w1-control.md). Maintain installation and delivery versions in [SDK integration](./integration.md). Check the installed configuration, running model, ROS domain, and endpoint QoS before connecting.

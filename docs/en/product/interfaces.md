@@ -35,4 +35,4 @@ The following interfaces apply to the documented `speed_W1_v1.2` ROS 2 configura
 | Accessories and cables                 | Compatible devices, cables, supply requirements, configurations, and connection sequence                                              |
 | Conditions of use                      | Connection prerequisites, environmental requirements, and configuration limits from the applicable product manual                     |
 
-The available software integration path is in the [W1 ROS 2 example](../sdk/ros2-example.md). Physical connection steps remain to be added to the [quick start](../guide/quick-start.md) once the required hardware documentation is available.
+The available software integration path is in the [W1 ROS 2 example](../sdk/ros2-example.md). Physical connection steps remain pending until the required hardware documentation is available.

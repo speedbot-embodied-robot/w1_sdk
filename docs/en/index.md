@@ -10,8 +10,8 @@ hero:
     alt: Speedbot W1 humanoid welding robot
   actions:
     - theme: brand
-      text: Quick start
-      link: ./guide/quick-start
+      text: SDK integration
+      link: ./sdk/integration
     - theme: alt
       text: Product overview
       link: ./product/overview
@@ -42,9 +42,8 @@ Measurement conditions and version mappings for product reference values still n
 ## Browse documentation
 
 - [Product overview](./product/overview.md) · [Capabilities and applications](./product/capabilities.md) · [Models and specifications](./product/specifications.md) · [Components and ports](./product/interfaces.md)
-- [First connection](./guide/quick-start.md) · [SDK integration](./sdk/integration.md) · [Read state example](./sdk/read-state.md)
-- [API reference](./api/reference.md) · [Compatibility](./support/compatibility.md) · [Release notes](./support/releases.md)
+- [SDK integration](./sdk/integration.md) · [Release notes](./support/releases.md)
+- [API reference](./api/reference.md)
 - [W1 ROS 2 example](./sdk/ros2-example.md) · [W1 whole-body control](./api/w1-control.md)
-- [Troubleshooting](./support/troubleshooting.md)
 
 Support channel: [To fill: public contact route, scope, and response expectations]

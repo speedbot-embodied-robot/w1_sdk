@@ -15,7 +15,7 @@ The [W1 ROS 2 example](./ros2-example.md) and [whole-body control reference](../
 | Supported languages     | [To fill: languages and versions actually supported]                       |
 | Verification record     | [To fill: verification date, environment, and location of results]         |
 
-Check [compatibility](../support/compatibility.md) to confirm that your device is a verified combination.
+Before integrating, confirm the device model, firmware version, and running `speed_W1_v1.2` configuration against this guide.
 
 ## Get and install
 
@@ -39,4 +39,4 @@ Check [compatibility](../support/compatibility.md) to confirm that your device i
 | Success result | [To fill: output or state actually observed]             |
 | Exit           | [To fill: how to stop the program and release resources] |
 
-Continue with the [read device state example](./read-state.md) and [public API reference](../api/reference.md)
+Continue with the [W1 ROS 2 interface example](./ros2-example.md) and [public API reference](../api/reference.md).
