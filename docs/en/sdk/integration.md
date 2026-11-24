@@ -11,7 +11,7 @@ This page records the locally verified W1 ROS 2 read-only example environment. T
 
 ## Get and install
 
-This repository provides the public `w1_docs_ros2` example package under `examples/ros2/src/w1_docs_ros2/`. The W1 workspace, controller, driver, and firmware must come from the delivered device environment. No official SDK download URL or firmware version can be confirmed on this machine, so they are omitted.
+This repository provides the public `w1_docs_ros2` example package under `examples/ros2/src/w1_docs_ros2/`. The W1 workspace, controller, driver, and firmware must come from the delivered device environment.
 
 Build the example package in the locally installed ROS 2 Humble environment:
 

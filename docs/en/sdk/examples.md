@@ -16,10 +16,10 @@ Python and C++ are independent implementations, with no language binding. The RO
 
 ## Code display and maintenance
 
-Each page imports real source files from the repository examples/ directory. Both translations show the same implementation with syntax highlighting and copy controls. Comments and output retain the source language.
+Each page imports real source files from the repository's `examples/` directory. Both languages display the same implementation.
 
-Rebuild after changing source files to update the displayed code. Maintain parameter descriptions, commands, and behavioral explanations in both languages separately. This website serves static documentation; run examples on your development machine or in CI.
+The website is static documentation; run the examples on your development machine or in CI.
 
 ## Connecting W1
 
-For `speed_W1_v1.2`, see the [W1 ROS 2 example](./ros2-example.md) and [W1 whole-body control reference](../api/w1-control.md). Maintain installation and delivery versions in [SDK integration](./integration.md). Check the installed configuration, running model, ROS domain, and endpoint QoS before connecting.
+For `speed_W1_v1.2`, see the [W1 ROS 2 example](./ros2-example.md) and [W1 whole-body control reference](../api/w1-control.md).

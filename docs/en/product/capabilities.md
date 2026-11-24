@@ -4,11 +4,11 @@ This page describes W1 mobility, perception and welding workflows. Performance, 
 
 ## Mobility and perception
 
-| Capability                           | Description                                                                                                                                            | Conditions or measurements still needed                                                           |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| Bipedal mobility                     | Crossing obstacles, autonomous navigation, obstacle avoidance and stairs in confined ship compartments                                                 | Walking speed, obstacle height, slope/stair conditions, ground requirements and validation scope  |
-| Environment and workpiece perception | Lidar, ToF cameras and a 3D line-scan camera for perceiving the surroundings and workpiece; counts are in [Components and interfaces](./interfaces.md) | Sensor models, range, resolution, mounting locations and calibration procedures                   |
-| Weld-seam processing                 | Finding and identifying seams, planning trajectories and performing welding                                                                            | Workpiece and seam coverage, recognition acceptance criteria, trajectory and weld-quality metrics |
+| Capability                           | Description                                                                                                                                            |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Bipedal mobility                     | Crossing obstacles, adapting to confined ship compartments, autonomous navigation, obstacle avoidance and stairs                                       |
+| Environment and workpiece perception | Lidar, ToF cameras and a 3D line-scan camera for perceiving the surroundings and workpiece; counts are in [Components and interfaces](./interfaces.md) |
+| Weld-seam processing                 | Finding and identifying seams, planning trajectories and performing welding                                                                            |
 
 Perception equipment does not itself define public data topics or SDK features. See the [interface example](../sdk/ros2-example.md) for ROS 2 state and application services supported by the supplied interface material. Physical connections and mounting information belong in [Components and interfaces](./interfaces.md).
 
@@ -35,8 +35,4 @@ This table describes the architecture concept. Process boundaries, messages, exe
 | 2026-11-06  | A plan to enter shipyards for training and validation in real working conditions at the end of 2026 |
 | 2026-11-08  | At the R&D prototype stage, without commercialization or order deliveries                           |
 
-These records describe the status and plans at the indicated dates. Later training results, production status and delivery records remain to be supplied. Updates need dates and applicable versions. SDK and firmware releases are maintained separately in [Releases](../support/releases.md).
-
-## Information still needed
-
-The official product name, parameter measurement conditions, capability limits and application progress remain to be confirmed. Missing measurements are collected in [Models and specifications](./specifications.md).
+These are historical status records and plans. SDK and firmware releases are maintained separately in [Releases](../support/releases.md).
