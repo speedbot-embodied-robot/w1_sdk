@@ -55,17 +55,11 @@ jobs:
         id: pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
-  deploy:
-    needs: [configure, examples, site]
+  build-pages:
+    needs: configure
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
+    timeout-minutes: 10
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -81,7 +75,7 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
-      - name: Build and verify the site
+      - name: Build and verify the Pages site
         env:
           DOCS_PLATFORM: github
           DOCS_BASE: ${{ needs.configure.outputs.base_path }}
@@ -93,8 +87,23 @@ jobs:
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
+          name: github-pages
           path: docs/.vitepress/dist
 
+  deploy:
+    needs: [configure, examples, site, build-pages]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+        with:
+          artifact_name: github-pages
