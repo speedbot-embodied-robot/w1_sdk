@@ -269,6 +269,6 @@ ros2 service type /plan_move
 
 ## Sources and verification scope
 
-Interface sources are this repository's `tmp/W1_ROS2通讯接口示例.md` and `tmp/整机控制接口README.md`; the W1-specific contract takes precedence. Their 2026-11-20 verification record reports right-elbow feedback of 0.0000 rad and PVT `waiting` in a headless W1 mock, a successful planning-only request with 183 trajectory points, an offline 100 Hz replay check, and Teach/Capture message-field checks. **These are source records, not results rerun during this documentation integration.** The trajectory point count is not fixed. The source did not validate physical motion, camera capture or welding execution.
+The W1-specific contract takes precedence. Their 2026-11-20 verification record reports right-elbow feedback of 0.0000 rad and PVT `waiting` in a headless W1 mock, a successful planning-only request with 183 trajectory points, an offline 100 Hz replay check, and Teach/Capture message-field checks. **These are source records, not results rerun during this documentation integration.** The trajectory point count is not fixed. The source did not validate physical motion, camera capture or welding execution.
 
 This repository's tests cover the client and documentation build. Full W1 integration requires the corresponding delivered workspace. Record exact software versions, firmware combinations and deployment validation in [SDK integration](./integration.md).

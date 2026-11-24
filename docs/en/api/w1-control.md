@@ -117,6 +117,6 @@ Readiness includes an active controller and driver handover. The W1 startup gate
 
 ## Sources and scope
 
-Sources are this repository's `tmp/W1_ROS2通讯接口示例.md` and `tmp/整机控制接口README.md`. The W1-specific guide takes precedence over generic or historical descriptions: this page uses current 100 Hz arm interpolation, session tokens and hardware feedforward mapping, rather than older 50/500 Hz replay conditions without interpolation.
+The W1-specific guide takes precedence over generic or historical descriptions: this page uses current 100 Hz arm interpolation, session tokens and hardware feedforward mapping, rather than older 50/500 Hz replay conditions without interpolation.
 
 The W1 installation should include YAML, replay scripts and trajectories under `docs/examples/`, and replay dependencies. Rebuild that workspace after configuration or data changes to update installed copies. Driver sources, trajectory data and calibration files not supplied with these documents are not provided here. Exact software revisions and firmware versions remain to be recorded with a release.
