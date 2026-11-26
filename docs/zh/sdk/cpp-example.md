@@ -68,7 +68,7 @@ echo $?
 
 ## 作为库接入自己的项目
 
-库与可执行程序分开构建。公开 target 是 `w1_docs::state`，它传播头文件搜索路径和 C++17 要求。此版本支持 `add_subdirectory`，尚未提供 `install`、`export` 或 `find_package` 安装包。
+库与可执行程序分开构建。公开 target 是 `w1_docs::state`，它传播头文件搜索路径和 C++17 要求。
 
 ::: code-group
 <<< ../../../examples/cpp/CMakeLists.txt{cmake:line-numbers}
