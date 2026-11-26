@@ -68,7 +68,7 @@ The duplicate-name check uses a nested loop with O(n²) worst-case complexity an
 
 ## Consume the library from another project
 
-The library and executable are separate build targets. The public target `w1_docs::state` propagates its include directory and C++17 requirement. This version supports `add_subdirectory`; it does not provide an `install`, `export`, or `find_package` package.
+The library and executable are separate build targets. The public target `w1_docs::state` propagates its include directory and C++17 requirement.
 
 ::: code-group
 <<< ../../../examples/cpp/CMakeLists.txt{cmake:line-numbers}

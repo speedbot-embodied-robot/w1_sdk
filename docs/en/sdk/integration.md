@@ -1,10 +1,8 @@
 # SDK integration
 
-This page explains how to build the public ROS 2 example package in this repository. The W1 controller, drivers, and hardware workspace must come from the device delivery environment. The current official interface is `speed_W1_v1.2`, with 26 controlled joints and six axes on each arm.
+This page explains how to build the public ROS 2 example package in this repository. The current official interface is `speed_W1_v1.2`, with 26 controlled joints and six axes on each arm.
 
 ## Environment
-
-The `w1_docs_ros2` example package targets Ubuntu 22.04, ROS 2 Humble, and Python 3.10. The following versions were verified locally. No W1 hardware was connected during verification.
 
 | Item                              | Local environment                            |
 | --------------------------------- | -------------------------------------------- |

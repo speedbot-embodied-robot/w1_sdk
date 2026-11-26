@@ -36,11 +36,11 @@ Mechanical structure diagram
 | Runtime                 | 4 hours of continuous walking |
 | Charging time           | 1.5 hours                     |
 
-These are reference values. Measurement conditions and the applicable delivered configuration are not specified here; confirm them against the relevant delivery documentation before selection or deployment.
+These are reference values.
 
 ## ROS 2 controlled axes
 
-| Scope                               | Value                                         | Meaning for developers                                                                                          |
+| Scope                               | Value                                         | Meaning                                                                                                         |
 | ----------------------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `speed_W1_v1.2` ROS 2 configuration | 26 controlled axes: 14 legs/waist and 12 arms | The current interface uses this configuration for command order and array lengths; whole-body PVT has 78 values |
 
