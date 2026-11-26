@@ -20,13 +20,11 @@ The descriptions do not provide posture-specific workspaces, stability condition
 
 ## Control architecture
 
-| Layer | Role                                | Documentation limit                                                  |
-| ----- | ----------------------------------- | -------------------------------------------------------------------- |
-| S2    | Task planning                       | Module boundaries and interface definitions remain to be supplied    |
-| S1    | Action planning / action scheduling | The precise role and software module contract remain to be confirmed |
-| S0    | Motion control                      | Module boundaries and interface definitions remain to be supplied    |
-
-This table describes the architecture concept. Process boundaries, messages, execution rates, hardware allocation and the relationship of S2/S1/S0 to Planner, TeachPanel and PVT interfaces remain to be documented.
+| Layer | Role                                |
+| ----- | ----------------------------------- |
+| S2    | Task planning                       |
+| S1    | Action planning / action scheduling |
+| S0    | Motion control                      |
 
 ## Application stage and dated records
 

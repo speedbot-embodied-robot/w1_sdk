@@ -17,17 +17,17 @@ See [Capabilities and applications](./capabilities.md) for mobility, postures, p
 
 ## Model and interface scope
 
-This site's [ROS 2 interface example](../sdk/ros2-example.md) and [whole-body control reference](../api/w1-control.md) specifically cover `speed_W1_v1.2`, with 28 controlled axes and two seven-axis arms.
+This site's [ROS 2 interface examples](../sdk/ros2-example.md) and [whole-body control reference](../api/w1-control.md) cover the official `speed_W1_v1.2` configuration, with 26 controlled joints and six axes on each arm.
 
-The product reference degree-of-freedom count and the number of software-controlled axes differ; see [Models and specifications](./specifications.md). When integrating software, follow the installed configuration and interface documentation for the specific model.
+The mechanical whole-body degree-of-freedom figure and the software controlled-joint count describe different parameters; see [Models and specifications](./specifications.md). Follow the installed configuration and interface documentation for software integration.
 
 ## Where developers can start
 
-| Task                                              | Required configuration                                                                      | Result to inspect                                                                                                                      |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Read joint feedback and PVT status                | ROS 2 Humble, this site's `w1_docs_ros2` reader and running endpoints from the W1 workspace | Read the right elbow position by name and inspect the PVT service's `success/message`; see the [ROS 2 example](../sdk/ros2-example.md) |
-| Request planning for one arm                      | W1 Planner, `speedbot_msgs` and the corresponding planning scene                            | Call `/plan_move` with `execute=false` and inspect the result, trajectory and scene version; see the planning example on the same page |
-| Understand welding-program generation             | W1 vision node, TeachPanel, camera, measured calibration and a valid TCP                    | Review Capture/Build prerequisites, program paths and length fields in the welding-service section on the same page                    |
-| Check language toolchains and calling conventions | Python 3.10+, or C++17 and CMake                                                            | Run the independent [examples](../sdk/examples.md) for data validation and calling patterns                                            |
+| Task                                              | Required configuration                                      | Result to inspect                                                                                                      |
+| ------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Read joint and IMU state                          | ROS 2 Humble and a running W1 workspace                     | Read joint state by name and parse IMU messages; see the [ROS 2 examples](../sdk/ros2-example.md)                      |
+| Review bilateral teaching                         | A system with the W1 teaching panel loaded                  | Check single-arm and dual-arm `/arm_move` target formats; see the [ROS 2 examples](../sdk/ros2-example.md)             |
+| Review command-array layout                       | ROS 2 Humble and the official `speed_W1_v1.2` configuration | Check the 26-axis order, data blocks, and command topics; see the [whole-body control interface](../api/w1-control.md) |
+| Check language toolchains and calling conventions | Python 3.10+, or C++17 and CMake                            | Run the independent [examples](../sdk/examples.md) for data validation and calling patterns                            |
 
-The repository's client tests cover reads and error handling against isolated endpoints. Running the W1 controller, planner, camera and welding workflow requires the corresponding workspace and equipment; client tests do not replace whole-robot acceptance. Installation and delivery-version information is maintained in [SDK integration](../sdk/integration.md).
+The joint, IMU, and control examples explain ROS 2 message reading and data layout. Availability of hardware state streams depends on the corresponding real-robot publishers and monitor nodes. See [SDK integration](../sdk/integration.md) for environment details.

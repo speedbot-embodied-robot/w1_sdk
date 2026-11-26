@@ -4,7 +4,7 @@
 
 # API scope
 
-For W1 ROS 2 command formats, the 28-joint order, and PVT sessions, see [W1 whole-body control](./w1-control.md). State, planning, teaching, and welding calls are covered in the [W1 ROS 2 example](../sdk/ros2-example.md). Use the template below for additional SDK symbols and exact release versions.
+The current official `speed_W1_v1.2` ROS 2 interface has 26 controlled joints. For command formats and order, see [W1 whole-body control](./w1-control.md). State and teaching topics are covered in the [W1 ROS 2 example](../sdk/ros2-example.md). Use the template below for additional SDK symbols and exact release versions.
 
 | Field                          | Value                                                                                |
 | ------------------------------ | ------------------------------------------------------------------------------------ |

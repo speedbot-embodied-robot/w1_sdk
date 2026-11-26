@@ -1,25 +1,11 @@
 # Runnable examples
 
-The Python example subscribes to W1's `/joint_states` topic with ROS 2 Humble and records feedback as JSONL. The C++ example uses synthetic state to demonstrate language and library interfaces. The ROS 2 guide also covers a single-joint read, PVT status queries, and planning, teaching, and welding interfaces.
+The repository provides a Python joint-feedback recorder and a C++17 data-validation example. The W1 ROS 2 page covers state topics, real-robot IMU and motor diagnostics, the 26-axis command layout, and the bilateral teaching interface.
 
-| Example                       | Input and output                                            | Focus                                                                          | Environment                                                                  |
-| ----------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| [Python](./python-example.md) | Subscribe to `/joint_states` and record feedback as JSONL   | ROS 2 subscriptions, message-array semantics, acquisition time, file recording | Python 3.10, ROS 2 Humble, rclpy, sensor_msgs, std_srvs; W1 workspace for W1 |
-| [C++](./cpp-example.md)       | Construct synthetic state and validate it through a library | RAII, ownership, explicit errors, separate library and caller                  | C++17, CMake                                                                 |
-| [W1 ROS 2](./ros2-example.md) | Read one joint and query PVT status                         | Joint-name matching, QoS, asynchronous services, timeouts, shutdown            | ROS 2 Humble, rclpy, sensor_msgs, std_srvs; W1 workspace for integration     |
+| Example                       | Input and output                                               | Focus                                                                        | Environment                                                           |
+| ----------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [Python](./python-example.md) | Subscribe to `/joint_states` and record feedback as JSONL      | ROS 2 subscriptions, message-array semantics, timestamps, and file recording | Python 3.10, ROS 2 Humble, rclpy, sensor_msgs                         |
+| [C++](./cpp-example.md)       | Validate synthetic state                                       | RAII, ownership, error handling, CMake target                                | C++17, CMake                                                          |
+| [W1 ROS 2](./ros2-example.md) | Read joint and IMU state, inspect motor and control interfaces | Message fields, QoS, 26-axis order, teaching topic                           | ROS 2 Humble; a running device workspace is required to connect to W1 |
 
-## Suggested order
-
-Build the ROS 2 package as described on the Python page, then run the recorder against an active W1 `/joint_states` publisher. Without a W1 environment, you can run the C++ example and the isolated-endpoint tests described in the ROS 2 guide. Those tests exercise client communication with test endpoints; they do not run a W1 controller or simulate hardware.
-
-Python and C++ are independent implementations, with no language binding. The ROS 2 example uses the Python client library; the ROS message type defines the contract between nodes written in different languages.
-
-## Code display and maintenance
-
-Each page imports real source files from the repository's `examples/` directory. Both languages display the same implementation.
-
-The website is static documentation; run the examples on your development machine or in CI.
-
-## Connecting W1
-
-For `speed_W1_v1.2`, see the [W1 ROS 2 example](./ros2-example.md) and [W1 whole-body control reference](../api/w1-control.md).
+The Python recorder saves received joint feedback. The C++ example uses synthetic data. The ROS 2 page demonstrates subscriptions to public joint and IMU topics and describes public control-message layouts.

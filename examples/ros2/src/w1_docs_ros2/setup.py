@@ -18,7 +18,7 @@ setup(
     maintainer="W1 documentation maintainers",
     maintainer_email="jouyang@speedbot.com",
     description=(
-        "Read W1 joint feedback, query PVT status, and record JointState data."
+        "Read W1 joint feedback and record JointState data."
     ),
     license="MIT",
     entry_points={

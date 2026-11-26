@@ -1,12 +1,12 @@
-# W1 ROS 2 feedback and PVT status example
+# W1 ROS 2 joint-state examples
 
 The `w1_docs_ros2` package reads a named joint from `/joint_states`
-(`sensor_msgs/msg/JointState`), then queries
-`/mit_controller/get_pvt_interpolation_status` (`std_srvs/srv/Trigger`).
-The defaults match the supplied `speed_W1_v1.2` interface documentation.
-It sends no motion, reset or stop command and does not require `speedbot_msgs`.
+(`sensor_msgs/msg/JointState`) and records received feedback as JSONL. These
+examples only read robot state and do not send motion commands.
 
-From the repository root, with ROS 2 Humble installed:
+The documented W1 interface is the current official `speed_W1_v1.2`
+configuration with 26 controlled joints and six axes on each arm. From the
+repository root, with ROS 2 Humble installed:
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -17,51 +17,37 @@ source examples/ros2/install/local_setup.bash
 ros2 run w1_docs_ros2 state_reader
 ```
 
-Run the reader in the same ROS domain as an already started W1 controller or
-W1 mock. The package does not install that controller, its launch files,
-configuration or custom planning/welding services. The full
-[Chinese guide](../../docs/zh/sdk/ros2-example.md) and
-[English guide](../../docs/en/sdk/ros2-example.md) explain W1 startup and discovery.
+Run the reader in the same ROS domain as an already-started W1 controller or
+another `/joint_states` publisher. The package does not install the W1
+controller, its launch files, or configuration. See the [Chinese guide](../../docs/zh/sdk/ros2-example.md)
+and [English guide](../../docs/en/sdk/ros2-example.md) for the state and control interfaces.
 
-Parameters: `joint_name` defaults to `right_elbow_joint`, `timeout_seconds` to
-`5.0` for feedback, and `service_timeout_seconds` to `5.0` for discovery and then
-another `5.0` for the response. Deadlines use the monotonic clock, including
-when ROS simulated time is paused. Valid unrelated or position-less messages
-are ignored without renewing the deadline. Invalid array lengths, duplicate
-names and non-finite values cause an error. The reader prints one JSON record
-with `joint_name`, `position_rad`, `stamp`, `frame_id`, and
-`pvt: {success, message}`. It preserves the returned PVT state, including states
-other than `waiting`. A completed request with `success=false` prints its response
-and exits with code 4; it does not mean transport failed. On a nonzero exit,
-`ros2 run` may append its own process-exit notice after the node output.
+The `state_reader` parameters are `joint_name` (default `right_elbow_joint`)
+and `timeout_seconds` (default `5.0`). It selects the joint by name, reports
+its position and message timestamp, and exits after one valid sample. Invalid
+array lengths, duplicate names and non-finite values produce an error. Exit
+codes are 0 for success, 2 for invalid parameters or messages, 3 for timeout,
+and 130 for interruption.
 
-Exit codes: 0 success; 2 invalid parameters/message; 3 feedback, discovery or
-response timeout; 4 service call failure or `success=false`; 130 interruption.
-The feedback timestamp is reported, not checked against a motion-control
-freshness threshold. This single snapshot is not a controller readiness gate.
-
-Remap both absolute endpoint names when using a robot namespace:
+To record continuous feedback, select an output path that does not already
+exist and run:
 
 ```bash
-ros2 run w1_docs_ros2 state_reader --ros-args \
-  -r /joint_states:=/robot_1/joint_states \
-  -r /mit_controller/get_pvt_interpolation_status:=/robot_1/mit_controller/get_pvt_interpolation_status \
-  -p joint_name:=right_elbow_joint -p timeout_seconds:=5.0 \
-  -p service_timeout_seconds:=5.0
+ros2 run w1_docs_ros2 record_joint_states --ros-args \
+  -p output_path:=joint_states.jsonl \
+  -p duration_seconds:=10.0 \
+  -p timeout_seconds:=5.0
 ```
 
-To test only the client, from the repository root after sourcing its overlay:
+The recorder preserves the received `JointState` names, arrays, timestamp, and
+frame ID. It sends no motion command.
+
+To test the client and recorder against local isolated publishers, build and
+source the overlay first, then run:
 
 ```bash
-colcon --log-base examples/ros2/log test --build-base examples/ros2/build \
-  --install-base examples/ros2/install --packages-select w1_docs_ros2 \
-  --python-testing pytest
-colcon test-result --test-result-base examples/ros2/build --verbose
 ROS_LOCALHOST_ONLY=1 ROS_DOMAIN_ID=169 python3 examples/ros2/test_cli.py
 ```
 
-Choose an unused local domain if 169 is occupied. The CLI tests create synthetic
-feedback and Trigger responses under unique `/w1_docs_test_...` endpoints and
-remap the reader to them. These tests do not run W1 mock, contact a controller,
-or verify hardware behavior. The former standalone `fixture_publisher` teaching
-entry point has been removed; test fixtures live only in `test_cli.py`.
+Choose an unused local domain if 169 is occupied. Tests use synthetic state
+messages and do not connect to W1 or emulate its controller or hardware.

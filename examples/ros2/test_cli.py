@@ -19,11 +19,10 @@ ENV = {**os.environ, "ROS_LOCALHOST_ONLY": "1"}
 ENV.setdefault("ROS_DOMAIN_ID", "169")
 
 
-def command(topic, service, *parameters):
+def command(topic, *parameters):
     return [
         "ros2", "run", "w1_docs_ros2", "state_reader", "--ros-args",
         "-r", f"/joint_states:={topic}",
-        "-r", f"/mit_controller/get_pvt_interpolation_status:={service}",
         *parameters,
     ]
 
@@ -35,15 +34,14 @@ def recorder_command(topic, *parameters):
     ]
 
 
-def fixture(topic, service, mode):
+def fixture(topic, mode):
     """Internal subprocess entry; endpoints are always beneath a test namespace."""
     import rclpy
     from rclpy.executors import ExternalShutdownException
     from rclpy.qos import qos_profile_sensor_data
     from sensor_msgs.msg import JointState
-    from std_srvs.srv import Trigger
 
-    if not topic.startswith("/w1_docs_test_") or not service.startswith("/w1_docs_test_"):
+    if not topic.startswith("/w1_docs_test_"):
         raise ValueError("test endpoints must use the isolated namespace")
     rclpy.init(args=[])
     node = rclpy.create_node("w1_reader_test_fixture")
@@ -77,16 +75,7 @@ def fixture(topic, service, mode):
         msg.header.stamp = node.get_clock().now().to_msg()
         publisher.publish(msg)
 
-    def status(request, response):
-        if mode == "slow_service":
-            time.sleep(2.0)
-        response.success = mode != "rejected"
-        response.message = "disabled" if mode == "rejected" else "holding"
-        return response
-
     node.create_timer(0.05, publish)
-    if mode != "no_service":
-        node.create_service(Trigger, service, status)
     try:
         rclpy.spin(node)
     except (KeyboardInterrupt, ExternalShutdownException):
@@ -100,11 +89,10 @@ class InstalledCliTest(unittest.TestCase):
     def setUp(self):
         prefix = f"/w1_docs_test_{os.getpid()}/{self._testMethodName}"
         self.topic = prefix + "/joint_states"
-        self.service = prefix + "/get_pvt_interpolation_status"
 
     def run_reader(self, *parameters):
         return subprocess.run(
-            command(self.topic, self.service, *parameters),
+            command(self.topic, *parameters),
             env=ENV, text=True, capture_output=True, timeout=15,
         )
 
@@ -120,14 +108,14 @@ class InstalledCliTest(unittest.TestCase):
 
     def run_exchange(self, mode="valid", *parameters):
         publisher = subprocess.Popen(
-            [sys.executable, __file__, "--fixture", self.topic, self.service, mode],
+            [sys.executable, __file__, "--fixture", self.topic, mode],
             env=ENV, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
             text=True, start_new_session=True,
         )
         try:
             result = self.run_reader(
                 "-p", "timeout_seconds:=5.0",
-                "-p", "service_timeout_seconds:=3.0", *parameters,
+                *parameters,
             )
             self.assertIsNone(publisher.poll(), "test fixture exited early")
             return result
@@ -142,7 +130,7 @@ class InstalledCliTest(unittest.TestCase):
 
     def run_recorder_exchange(self, output_path, mode="valid", *parameters):
         publisher = subprocess.Popen(
-            [sys.executable, __file__, "--fixture", self.topic, self.service, mode],
+            [sys.executable, __file__, "--fixture", self.topic, mode],
             env=ENV, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
             text=True, start_new_session=True,
         )
@@ -159,14 +147,13 @@ class InstalledCliTest(unittest.TestCase):
                 os.killpg(publisher.pid, signal.SIGKILL)
                 publisher.communicate()
 
-    def test_valid_named_joint_and_service(self):
+    def test_valid_named_joint(self):
         result = self.run_exchange()
         self.assertEqual(result.returncode, 0, result.stderr)
         payload = json.loads(result.stdout.strip())
         self.assertEqual(payload["joint_name"], "right_elbow_joint")
         self.assertEqual(payload["position_rad"], 0.25)
-        # Do not restrict a successful response to the startup state "waiting".
-        self.assertEqual(payload["pvt"], {"success": True, "message": "holding"})
+        self.assertEqual(payload["frame_id"], "test_base")
         self.assertGreater(payload["stamp"]["sec"], 0)
 
     def test_joint_parameter(self):
@@ -196,29 +183,9 @@ class InstalledCliTest(unittest.TestCase):
         self.assertEqual(result.returncode, 3, result.stderr)
         self.assertIn("position for right_elbow_joint timed out", result.stderr)
 
-    def test_missing_service(self):
-        result = self.run_exchange("no_service", "-p", "service_timeout_seconds:=0.5")
-        self.assertEqual(result.returncode, 3, result.stderr)
-        self.assertIn("PVT status service discovery timed out", result.stderr)
-
-    def test_slow_service(self):
-        result = self.run_exchange("slow_service", "-p", "service_timeout_seconds:=0.5")
-        self.assertEqual(result.returncode, 3, result.stderr)
-        self.assertIn("PVT status service response timed out", result.stderr)
-        self.assertNotIn("Traceback", result.stderr)
-
-    def test_service_reports_false(self):
-        result = self.run_exchange("rejected")
-        self.assertEqual(result.returncode, 4, result.stderr)
-        self.assertEqual(
-            json.loads(result.stdout.splitlines()[0])["pvt"],
-            {"success": False, "message": "disabled"},
-        )
-        self.assertIn("success=false", result.stderr)
-
     def test_invalid_parameters(self):
         for parameter in (
-            "timeout_seconds:=0.0", "service_timeout_seconds:=-1.0",
+            "timeout_seconds:=0.0",
             "timeout_seconds:=wrong_type", "joint_name:=42", "joint_name:=' '",
         ):
             with self.subTest(parameter=parameter):
@@ -303,7 +270,7 @@ class InstalledCliTest(unittest.TestCase):
             publisher = subprocess.Popen(
                 [
                     sys.executable, __file__, "--fixture", self.topic,
-                    self.service, "recorder_late",
+                    "recorder_late",
                 ],
                 env=ENV, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
                 text=True, start_new_session=True,
@@ -387,7 +354,7 @@ class InstalledCliTest(unittest.TestCase):
             publisher = subprocess.Popen(
                 [
                     sys.executable, __file__, "--fixture", self.topic,
-                    self.service, "recorder_valid",
+                    "recorder_valid",
                 ],
                 env=ENV, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
                 text=True, start_new_session=True,

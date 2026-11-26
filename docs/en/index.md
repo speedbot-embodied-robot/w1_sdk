@@ -27,13 +27,13 @@ features:
     details: Integrate the SDK in a verified environment and run a published example.
     link: ./sdk/integration
   - title: W1 whole-body control
-    details: Review joint order, units, sessions, and whole-body command restrictions.
+    details: Review the 26-axis joint order, units, and whole-body command restrictions.
     link: ./api/w1-control
 ---
 
 This manual provides product information and software integration guidance for W1 developers.
 
-**Scope**　The product section introduces W1 / Weldroid-W1. The ROS 2 section covers the 28-axis `speed_W1_v1.2` interface configuration.
+**Scope**　The product section introduces W1 / Weldroid-W1. The ROS 2 section covers the official 26-axis `speed_W1_v1.2` control interface.
 
 ::: info Documentation updated
 Through 2026-11-20.

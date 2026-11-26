@@ -41,7 +41,7 @@ npm run docs:preview
 
 ## 可运行代码示例
 
-[Python](./docs/zh/sdk/python-example.md) 示例通过 ROS 2 订阅 W1 的 `/joint_states`，将真实关节反馈录制为 JSONL，供故障排查和离线分析。[W1 ROS 2](./docs/zh/sdk/ros2-example.md) 还介绍按关节名读取状态、查询 PVT 状态服务，以及规划、示教和焊接接口；关节顺序与命令格式见 [W1 整机控制](./docs/zh/api/w1-control.md)。[C++](./docs/zh/sdk/cpp-example.md) 独立展示数据校验与库接入。中英文代码块从 `examples/` 导入同一份源码，保留 IDE 风格文件标签、行号和复制功能。
+[Python](./docs/zh/sdk/python-example.md) 示例通过 ROS 2 订阅 W1 的 `/joint_states`，将真实关节反馈录制为 JSONL，供故障排查和离线分析。[W1 ROS 2](./docs/zh/sdk/ros2-example.md) 介绍关节与 IMU 状态、电机诊断接口、26 轴命令布局和双臂示教；整机命令顺序见 [W1 整机控制](./docs/zh/api/w1-control.md)。[C++](./docs/zh/sdk/cpp-example.md) 独立展示数据校验与库接入。中英文代码块从 `examples/` 导入同一份源码，保留 IDE 风格文件标签、行号和复制功能。
 
 W1 接入需要另行安装的 W1 ROS 2 工作区与相应节点。本仓库不包含 `ethercat_motor_drive`、`speedbot_msgs`、控制 YAML、运动轨迹或标定文件；自动化测试使用隔离的端点替身，无需 W1 真机。
 
@@ -49,11 +49,11 @@ W1 接入需要另行安装的 W1 ROS 2 工作区与相应节点。本仓库不�
 python3 scripts/test_examples.py
 ```
 
-测试命令需要 Python 3.10+、CMake 3.20+ 和 C++17 编译器，检查源码引用校验器、C++、独立 CMake 接入。录制器和状态查询需要 ROS 2 Humble、已构建的本仓库示例包，以及发布 W1 `/joint_states` 的机器人工作区；具体命令和隔离端点测试见 ROS 2 教程。
+测试命令需要 Python 3.10+、CMake 3.20+ 和 C++17 编译器，检查源码引用校验器、C++、独立 CMake 接入。录制器和关节状态读取需要 ROS 2 Humble、已构建的本仓库示例包，以及发布 W1 `/joint_states` 的机器人工作区；具体命令和隔离端点测试见 ROS 2 教程。
 
 新增示例页时，中英文引用相同文件和代码区域。`docs:build` 会先检查源码导入，再构建网站。README 等普通 Markdown 阅读环境不展开 VitePress 的代码导入语法；完整展示请通过文档站查看，源文件在 `examples/` 中可直接阅读。
 
-推送到 main 后，发布工作流会先完成 C++、源码引用与 ROS 2 测试；全部通过才发布。Pull Request 也会执行示例测试。ROS 2 CI 使用 Humble 容器，验证 localhost 隔离端点下的状态订阅、服务调用、JSONL 录制及错误退出；这些测试不连接 W1 控制器或真机。
+推送到 main 后，发布工作流会先完成 C++、源码引用与 ROS 2 测试；全部通过才发布。Pull Request 也会执行示例测试。ROS 2 CI 使用 Humble 容器，验证 localhost 隔离端点下的状态订阅、JSONL 录制及错误退出；这些测试不连接 W1 控制器或真机。
 
 ## 站点结构
 

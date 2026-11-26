@@ -1,4 +1,4 @@
-W1 ROS 2 的真实只读接口已在 [W1 ROS 2 示例](./ros2-example.md)实现：读取 `/joint_states` 的右肘角度并查询 PVT 状态。Python、C++ 语言演示见[可运行示例](./examples.md)。此页保留用于补充其他 SDK 读取方式及交付版本信息。
+W1 ROS 2 的真实只读示例已在 [W1 ROS 2 示例](./ros2-example.md)中展示：按关节名读取 `/joint_states`，并可读取 IMU 反馈。Python、C++ 语言演示见[可运行示例](./examples.md)。此页保留用于补充其他 SDK 读取方式及交付版本信息。
 
 ## 示例范围
 

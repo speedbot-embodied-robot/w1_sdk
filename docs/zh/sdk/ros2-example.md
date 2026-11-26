@@ -1,268 +1,126 @@
-# ROS 2：W1 通讯接口与示例
+# W1 ROS 2 接口示例
 
-本页面向 `speed_W1_v1.2`（28 轴、七轴双臂），环境为 ROS 2 Humble。示例使用 W1 实际的 `/joint_states` 和 PVT 状态服务：先在 W1 mock 中读取反馈，再调用 `execute: false` 的右臂规划服务。所有名称均采用默认命名空间，完整关节顺序与控制约束见 [W1 整机控制接口](../api/w1-control.md)。
+本文适用于当前正式 `speed_W1_v1.2` 配置，使用 ROS 2 Humble。该配置有 26 个受控关节，左右臂各 6 轴。连接真实机器人时，需要使用设备当前的 ROS 域和已启动的控制工作区。完整的命令顺序与数组长度见[整机控制接口](../api/w1-control.md)。
 
-## 环境与依赖
+## 连接与核对
 
-开发环境使用 Ubuntu 22.04、Python 3.10 和 ROS 2 Humble。只读示例包 `w1_docs_ros2` 随本仓库提供，依赖 `rclpy`、`sensor_msgs`、`std_srvs`，通过 `ament_python` / `colcon` 构建。使用与 Humble 安装一致的系统 Python；需要另外安装 colcon 和 pytest 来构建、测试。
-
-W1 驱动与 mock 由已构建的 W1 工作区提供：`ethercat_motor_drive` 包、W1 launch 和 YAML 不在本仓库内。Planner、TeachPanel 和焊接示例还需要该工作区的 `speedbot_msgs` 及相应服务提供方。只读节点本身不依赖 `speedbot_msgs`。没有 W1 工作区时可以运行本页末尾的隔离通信测试，但无法启动 W1 mock。
-
-## 启动与发现
-
-两个终端都加载 Humble 和 **W1 工作区** 的安装环境；将下面路径替换为本机实际位置。域 83 是示例所选的本机测试域，应选用空闲域。跨电脑接入时，两端使用实际控制器所在域、设置 `ROS_LOCALHOST_ONLY=0`，并确保网络支持 DDS 发现。
+开发端应加载 ROS 2 Humble，并与 W1 使用相同的 `ROS_DOMAIN_ID`。跨主机通信时，双方需允许网络发现，例如 `ROS_LOCALHOST_ONLY=0`。
 
 ```bash
 source /opt/ros/humble/setup.bash
+# 已构建的 W1 工作区
 source /path/to/w1_ws/install/setup.bash
-export ROS_DOMAIN_ID=83
-export ROS_LOCALHOST_ONLY=1
-```
 
-终端 1 启动 W1 mock、RViz 和 Planner。只检查底层状态时可省略 `moveit:=true`；视觉节点另行启动。
-
-```bash
-ros2 launch ethercat_motor_drive motor_drive-speed_W1_v1_2.launch.py bSim:=true moveit:=true
-```
-
-终端 2 检查机型、活动控制器、反馈、PVT 订阅者和规划服务：
-
-```bash
-ros2 param get /mit_controller robot_model
 ros2 control list_controllers -c /controller_manager
-ros2 topic echo /joint_states --once --qos-reliability best_effort
-ros2 topic info /rl_motion_control_command_pvt -v
-ros2 service type /plan_move
-ros2 service call /mit_controller/get_pvt_interpolation_status std_srvs/srv/Trigger '{}'
-```
-
-预期模型为 `speed_W1_v1.2`、`mit_controller` 为 `active`，规划服务类型为 `speedbot_msgs/srv/PlanMove`。默认插补配置就绪、首帧发送前，PVT 查询返回 `success=true, message=waiting`。真机接入还需核对驱动交接和反馈新鲜度；W1 启动 gate 在配置轴全部接管后记录 `MIT first commands accepted by all configured drive plugins`。
-
-## 状态接口
-
-下表方向以外部应用为视角，均为订阅接收。
-
-| 话题                                                  | 消息类型                              | 字段与单位                                                                                                                                   | 可用条件                                                           |
-| ----------------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `/joint_states`                                       | `sensor_msgs/msg/JointState`          | 按 `name[i]` 关联 `position[i]`（rad）、`velocity[i]`（rad/s）、`effort[i]`（N·m，含义取决于驱动映射）；`header.stamp` 为消息时间            | mock、真机；按名提取受控轴，忽略被动脚趾等附加关节或仅含被动轴的帧 |
-| `/imu/data`                                           | `sensor_msgs/msg/Imu`                 | `header.frame_id` 在 W1 v1.2 配置中为 `base_link`；`orientation` 四元数 x/y/z/w、`angular_velocity`（rad/s）、`linear_acceleration`（m/s²）  | W1 真机 FSS IMU broadcaster；默认 mock 不提供这路硬件数据          |
-| `/motor_temperature_broadcaster/dynamic_joint_states` | `control_msgs/msg/DynamicJointState`  | 按关节名和接口名读取；常见状态接口包括 `status_word`、`error_code`、`motor_temperature`（°C）、`drive_temperature`（°C）、`bus_voltage`（V） | W1 真机状态 broadcaster；当前配置 10 Hz，具体字段因驱动支持而异    |
-| `/diagnostics`                                        | `diagnostic_msgs/msg/DiagnosticArray` | 标准 `status[]` 摘要：`name`、`level`、`message`、`hardware_id` 和键值 `values[]`                                                            | W1 真机且硬件状态监控已启动；默认 mock 不提供硬件诊断              |
-
-关节和 IMU 读端可用传感器 QoS。实际发布频率、QoS 和硬件数据是否存在，应在运行系统中检查：
-
-```bash
+ros2 param get /mit_controller joints
 ros2 topic info /joint_states -v
-ros2 topic hz /joint_states
-ros2 topic echo /imu/data --once --qos-reliability best_effort
 ```
 
-### IMU 与电机诊断只读查看
+确认 `joint_state_broadcaster` 和 `mit_controller` 已处于 `active` 状态。`joints` 参数应与控制接口页的 26 轴命令顺序一致。话题真实发布频率和 QoS 可分别用 `ros2 topic hz`、`ros2 topic info -v` 检查。
 
-在已加载 W1 工作区的终端中，先确认话题和消息类型，再读取一帧：
+## 状态话题
+
+| 话题                                                  | 消息类型                              | 字段和单位                                                                                                               | 可用条件                                               |
+| ----------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| `/joint_states`                                       | `sensor_msgs/msg/JointState`          | 按 `name[i]` 匹配 `position[i]`（rad）、`velocity[i]`（rad/s）、`effort[i]`（N·m）；`header.stamp` 是消息时间            | 仿真和真机。按名称提取受控关节，忽略被动脚趾等附加关节 |
+| `/imu/data`                                           | `sensor_msgs/msg/Imu`                 | `header.frame_id` 为 `base_link`；姿态四元数 x/y/z/w、角速度 rad/s、线加速度 m/s²，数据已转换到 `base_link` 坐标系       | 真机 IMU；默认仿真不提供这路硬件数据                   |
+| `/motor_temperature_broadcaster/dynamic_joint_states` | `control_msgs/msg/DynamicJointState`  | 按关节名与接口名从 `joint_names`、`interface_names`、`values` 查找；包括初始化、控制器接管、状态字、错误码及已配置温度项 | 真机硬件状态发布器，当前资料中的配置频率为 10 Hz       |
+| `/diagnostics`                                        | `diagnostic_msgs/msg/DiagnosticArray` | 遍历 `status[]` 的 `name`、`level`、`message` 和 `values`，读取聚合与总线告警                                            | 启用了硬件状态监控的系统                               |
+| `/fss_imu/temperature`                                | `std_msgs/msg/Float64`                | `data` 为温度标量，消息不含 Header                                                                                       | 真机 IMU 温度流                                        |
+
+`JointState` 的速度和力矩数组可能为空，不能将空值补成零。`effort` 的物理含义取决于驱动映射。`DynamicJointState` 应先按关节名定位，再按接口名读取，数组顺序不应硬编码。诊断状态的 `level=0` 也不单独代表系统已就绪，例如监控项仍可能处于 `starting` 状态。
+
+用于 TF 可视化的 `/joint_states_for_tf` 是单独支路。控制和数据采集应读取 `/joint_states`。
+
+读取话题样例：
 
 ```bash
-ros2 topic list -t
-ros2 topic type /imu/data
-ros2 topic info /imu/data -v
+# 仿真或真机
+ros2 topic echo /joint_states --once --qos-reliability best_effort
+ros2 topic info /joint_states -v
+
+# 对应硬件发布器和监控节点已启动的真机
 ros2 topic echo /imu/data --once --qos-reliability best_effort
-ros2 topic echo /motor_temperature_broadcaster/dynamic_joint_states --once
+ros2 topic echo /motor_temperature_broadcaster/dynamic_joint_states --once --qos-reliability best_effort
 ros2 topic echo /diagnostics --once
+ros2 topic echo /fss_imu/temperature --once
 ```
 
-`DynamicJointState` 中 `joint_names[i]` 对应 `interface_values[i]`；该项里的 `interface_names[j]` 再对应 `values[j]`。按名称查找，不要假设关节或接口的数组顺序固定。`status_word` 和 `error_code` 是驱动状态数值；具体含义以对应驱动型号及其公开定义为准。并非每种驱动都提供全部温度或电压接口。
+## Python：读取关节与 IMU
 
-`/diagnostics` 用于读取聚合状态；需要定位到单个关节时，再结合 `dynamic_joint_states` 的逐关节数据。IMU 消息的协方差字段也可读取；当前发布端未提供标定协方差，消费端不应把零值当作已标定的不确定度。
+下面的只读示例分别订阅关节和 IMU 话题，按关节名称取出右肘数据，并输出一条有效的 IMU 消息。两个话题独立到达，示例不进行时间同步。保存为 `read_w1_state.py` 后，在已 source ROS 环境的终端运行。
 
-### JointState 与 QoS
+<<< ../../../examples/ros2/snippets/read_w1_state.py{python:line-numbers}
 
-标准 `JointState` 的 `position`、`velocity`、`effort` 可以为空，非空时须与 `name` 等长。该读端进一步要求名称非空、不重复、至少一组状态数组非空，以及数据为有限数值；从合法消息按名提取 `right_elbow_joint` 的位置，忽略没有目标轴或没有位置数据的帧。数组顺序不需要与 28 轴命令顺序一致。未知力矩应保持空数组，不以零冒充真实测量。
-
-订阅端使用 Humble 的 `qos_profile_sensor_data`：`BEST_EFFORT`、`VOLATILE`、`KEEP_LAST`、depth 5。它可接收兼容的 best-effort 或 reliable 发布者；要求 reliable 的订阅器无法与 best-effort 发布者匹配。服务客户端使用 ROS 默认服务 QoS。Remap 只改变端点名，不转换消息类型或单位。
-
-标准定义可查阅 ROS 官方的 [JointState 消息](https://github.com/ros2/common_interfaces/blob/humble/sensor_msgs/msg/JointState.msg)和 [Humble QoS profiles](https://github.com/ros2/rmw/blob/humble/rmw/include/rmw/qos_profiles.h)。
-
-`header.stamp` 按消息语义表示状态记录时间，由发布者提供，可能为零；本例用单调时钟限制等待，并未检查该时间戳是否新鲜。仿真 `/clock` 暂停不会让等待无限持续。该节点用于接口读取，不提供运动前的反馈新鲜度验收或实时控制保证。
-
-### 录制连续关节反馈
-
-需要保存多帧 `/joint_states` 供离线分析时，使用 [Python JSONL 录制示例](./python-example.md)。录制器保留每条消息的名称顺序、状态数组、`header.stamp` 和 `frame_id`，并记录本地单调时钟经过时间；空状态数组保留为 `[]`。它只订阅并写文件，不发布控制命令。录制器与下方 `state_reader` 用途不同：`state_reader` 单次提取指定关节并查询 PVT 状态，录制器保存完整的连续反馈，不查询 PVT。
-
-## 只读节点：关节反馈与 PVT 状态
-
-从**本仓库根目录**构建，保留终端 2 已加载的 W1 环境和域设置：
+默认仿真没有 `/imu/data` 硬件流。若只想在仿真中验证 IMU 解析，可在同一 ROS 域发布测试消息，然后启动读端：
 
 ```bash
-colcon --log-base examples/ros2/log build \
-  --base-paths examples/ros2/src \
-  --build-base examples/ros2/build \
-  --install-base examples/ros2/install \
-  --packages-select w1_docs_ros2
-source examples/ros2/install/local_setup.bash
-ros2 run w1_docs_ros2 state_reader
+ros2 topic pub -r 5 /imu/data sensor_msgs/msg/Imu \
+  "{header: {frame_id: base_link}, orientation: {w: 1.0}, angular_velocity: {z: 0.125}, linear_acceleration: {z: 9.81}}"
 ```
 
-节点先读取右肘角度，再异步调用 `/mit_controller/get_pvt_interpolation_status`（`std_srvs/srv/Trigger`），输出一条 JSON。字段包括 `joint_name`、`position_rad`、`stamp`、`frame_id` 和 `pvt: {success, message}`；数值来自本次反馈与响应。收到其他有效 PVT 状态时也原样输出，不能把固定的 `waiting` 当作每次运行的结果。
+这条测试发布命令用于验证消息解析，不代表真实传感器数据。
 
-服务返回 `success=false` 时仍输出响应 JSON，再以退出码 4 结束；未取得响应的超时不会输出该 JSON。通过 `ros2 run` 运行时，非零退出可能在 stdout 追加 `[ros2run]: Process exited with failure N`，自动化解析需识别 JSON 行。退出 0 只表示读到位置并查询成功，不表示机器人已具备运动条件。
+## C++：读取单帧关节与 IMU
 
-| 参数                      | 默认值              | 含义                             |
-| ------------------------- | ------------------- | -------------------------------- |
-| `joint_name`              | `right_elbow_joint` | 需要读取的关节名                 |
-| `timeout_seconds`         | `5.0`               | 等待有效目标关节位置的最长时间   |
-| `service_timeout_seconds` | `5.0`               | 服务发现、服务响应各自的最长时间 |
+下面示例使用传感器 QoS 分别订阅两个话题，收到右肘位置和一条 `base_link` IMU 消息后退出。将代码保存为 ament C++ 包中的 `src/w1_state_reader.cpp`：
 
-默认三个阶段最多分别等待 5 秒，合计等待预算为 15 秒。ROS 浮点参数使用 `5.0`，避免写成整数类型。参数在启动时读取。
+<<< ../../../examples/ros2/snippets/read_w1_state.cpp{cpp:line-numbers}
 
-```bash
-ros2 run w1_docs_ros2 state_reader --ros-args \
-  -p joint_name:=right_elbow_joint \
-  -p timeout_seconds:=5.0 -p service_timeout_seconds:=5.0
+在 `package.xml` 和 `CMakeLists.txt` 中声明 `ament_cmake`、`rclcpp` 与 `sensor_msgs` 依赖，并在 `CMakeLists.txt` 中加入构建目标：
+
+```cmake
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+
+add_executable(w1_state_reader src/w1_state_reader.cpp)
+ament_target_dependencies(w1_state_reader rclcpp sensor_msgs)
+install(TARGETS w1_state_reader DESTINATION lib/${PROJECT_NAME})
+ament_package()
 ```
 
-有命名空间的部署可映射两个**绝对端点**。下例 `/robot` 是部署命名空间示意：
+执行 `colcon build --packages-select <your_package>`，然后 source `install/setup.bash` 并运行 `ros2 run <your_package> w1_state_reader`。两个话题是独立消息流，读取结果不保证来自同一采样时刻。
 
-```bash
-ros2 run w1_docs_ros2 state_reader --ros-args \
-  -r /joint_states:=/robot/joint_states \
-  -r /mit_controller/get_pvt_interpolation_status:=/robot/mit_controller/get_pvt_interpolation_status
+## 控制话题与数组布局
+
+底层控制命令及 26 轴关节顺序见[整机控制接口](../api/w1-control.md)。常用入口如下：
+
+| 话题                                    | 类型                             | 数组长度 | 数据                     |
+| --------------------------------------- | -------------------------------- | -------: | ------------------------ |
+| `/rl_motion_control_command_pvt`        | `std_msgs/msg/Float64MultiArray` |       78 | q[26] + qd[26] + τff[26] |
+| `/rl_motion_control_command`            | `std_msgs/msg/Float64MultiArray` | 26 或 12 | 全身 q，或仅双腿 q       |
+| `/rl_motion_control_command_with_kp_kd` | `std_msgs/msg/Float64MultiArray` |       78 | q[26] + kp[26] + kd[26]  |
+| `/lower_body_joint_position_command`    | `std_msgs/msg/Float64MultiArray` |       14 | 双腿和腰部 q             |
+| `/arm_joint_position_command_165`       | `std_msgs/msg/Float64MultiArray` |       12 | 左臂 q[6] + 右臂 q[6]    |
+
+数组位置与单位必须符合接口定义。以下示例只展示如何组装 PVT 消息对象，不会发布运动命令：
+
+```python
+from std_msgs.msg import Float64MultiArray
+
+q = [0.0] * 26
+qd = [0.0] * 26
+tau_ff = [0.0] * 26
+
+if not (len(q) == len(qd) == len(tau_ff) == 26):
+    raise ValueError("PVT arrays must each contain 26 values")
+
+msg = Float64MultiArray()
+msg.data = q + qd + tau_ff
+assert len(msg.data) == 78
 ```
 
-| 退出码 | 含义                                                     |
-| ------ | -------------------------------------------------------- |
-| 0      | 成功读取关节位置，状态服务返回 `success=true`            |
-| 2      | 消息校验失败，或参数类型/范围不合法                      |
-| 3      | 等待反馈、服务发现或服务响应超时                         |
-| 4      | 服务调用失败或返回 `success=false`；需检查响应状态及原因 |
-| 130    | Ctrl+C 或上下文关闭                                      |
+命令位置为绝对值。发送前应从当前反馈和设备模型确认目标、数组顺序、单位与限位。部署系统在发布前需完成控制器和执行器接管。
 
-### 完整源码
+## 单臂与双臂示教
 
-此节点只订阅状态并查询服务，不调用 reset/stop、不发布运动命令。回调和异步服务由 `SingleThreadedExecutor` 驱动；服务等待位于回调之外，避免在同一执行器回调中阻塞等待自身的响应。结束时释放执行器、节点与 context。
-
-::: code-group
-<<< ../../../examples/ros2/src/w1_docs_ros2/w1_docs_ros2/state_reader.py{python:line-numbers}
-:::
-
-源码是构建和网页展示的同一份文件。包清单和安装入口如下：
-
-::: code-group
-<<< ../../../examples/ros2/src/w1_docs_ros2/package.xml{xml:line-numbers} [package.xml]
-<<< ../../../examples/ros2/src/w1_docs_ros2/setup.py{python:line-numbers} [setup.py]
-<<< ../../../examples/ros2/src/w1_docs_ros2/setup.cfg{ini:line-numbers} [setup.cfg]
-:::
-
-## PVT 命令与回放
-
-W1 默认控制器为 500 Hz，双臂 P/V 插补期望 100 Hz 输入。`/rl_motion_control_command_pvt` 使用 `std_msgs/msg/Float64MultiArray`，84 项按 **28 个 q + 28 个 qd + 28 个 τff** 拼接，单位分别为 rad、rad/s、N·m。重置会话后，`layout.dim` 恰好一项，`label` 逐字使用 reset 返回的令牌；回放器同时设置 `size=84, stride=84`。
-
-开始流程为 reset → 查询到 `success=true, waiting` → 从保持位置发首帧（速度、前馈均为零）→ 持续发布同一令牌。选中关节首帧位置容差默认 0.001 rad。50 Hz 源需匹配 0.02 s 配置并重载控制器。停止请求返回成功仅表示接受，需继续查到 `stopped` 或 `fault`，且只作用于插补轴。
-
-完整的五个命令入口、关节顺序、三个会话服务和硬件映射见 [W1 整机控制接口](../api/w1-control.md)。默认双臂插补会限制全身 P、P+KP+KD 及双臂位置入口，不能直接套用未启用插补时的发送例程。
-
-W1 安装包中的 horizontal400 回放器包含反馈检查、首姿态过渡、令牌和停止处理。先执行离线检查：
+W1 默认提供双臂示教。`/arm_move` 接收度为单位的关节目标，单臂为 6 项，双臂为 12 项并按左臂在前排列。话题格式与示例见下方命令：
 
 ```bash
-controller_share=$(ros2 pkg prefix --share ethercat_motor_drive)
-bash "$controller_share/docs/examples/trajtest_w1_horizontal400.sh" --check-only
-```
-
-资料给出的离线摘要为 `6800 frames, 28 controlled joints, 100 Hz`。下面命令会实际发送约 68 秒轨迹，另含过渡与保持；只在前述已启动的 W1 mock、同一隔离域内进行本例的发布测试：
-
-```bash
-bash "$controller_share/docs/examples/trajtest_w1_horizontal400.sh"
-```
-
-默认回放力矩前馈为零；仍需检查在线 PVT 状态和反馈。脚本、轨迹及其依赖由 `ethercat_motor_drive` 安装包提供，本仓库不含这些文件。
-
-## 双臂规划与示教
-
-| 接口                                | 方式与类型                                                                               | 参数、单位与返回                                                                                                               |
-| ----------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `/plan_move`                        | Planner 服务，`speedbot_msgs/srv/PlanMove`                                               | 每次选择一侧臂，7 个目标角，**rad**；起点取当前反馈，`execute=false` 只规划                                                    |
-| `/plan_move/stop`                   | Planner 服务，`std_srvs/srv/Trigger`                                                     | 空请求，停止 Planner 发布执行轨迹                                                                                              |
-| `/arm_move`                         | TeachPanel 话题，`std_msgs/msg/Float64MultiArray`                                        | 单臂 7 个**度数**，`layout.dim[].label` 为 `left_arm`/`right_arm`；双臂 MOVE_J 为 14 个度数，左臂在前；入队后无 topic 完成响应 |
-| `/left_arm_move`、`/right_arm_move` | Planner **服务**为 `speedbot_msgs/srv/ArmMoveJointState`；Teach 同名**话题**是旧兼容入口 | Planner 服务按反馈和目标规划并请求执行；新接入只规划用 `/plan_move`，排入示教队列用 `/arm_move`                                |
-
-### 仅规划右臂
-
-| 方向 | 字段                                       | 含义                                                                     |
-| ---- | ------------------------------------------ | ------------------------------------------------------------------------ |
-| 请求 | `id`、`arm_name`、`planner_id`             | 字符串标记、臂组 `left_arm/right_arm`、规划器标识                        |
-| 请求 | `goal_joint_state.data`、`execute`         | 按所选 MoveIt 臂组顺序排列的 7 个 rad；是否进入执行路径                  |
-| 响应 | `success`、`message`                       | 结合本次 `execute` 解释；目标、当前状态或场景均可能导致规划失败          |
-| 响应 | `trajectory`、`scene_version`、`replanned` | `JointTrajectory` 含 `joint_names`、`points`；另返回场景版本及是否重规划 |
-
-前面的 `moveit:=true` 启动服务。以下调用只规划；成功时检查轨迹关节名和点，失败时检查 `message`：
-
-```bash
-ros2 service call /plan_move speedbot_msgs/srv/PlanMove \
-  "{id: w1_demo, arm_name: right_arm, planner_id: RRTConnectkConfigDefault, goal_joint_state: {data: [0.0, -1.36, 0.0, 0.1, 0.0, 0.0, 0.0]}, execute: false}"
-```
-
-### 向 Teach 提交右臂 MOVE_J
-
-此调用会提交运动任务。用于已加载七轴 TeachPanel、并以**关闭双臂 PVT 插补**配置重新启动的 mock；前面的默认配置只满足上述只规划例程。Teach 的目标使用度，Planner 和底层控制使用 rad。
-
-```bash
+ros2 topic info /arm_move -v
 ros2 topic pub --once /arm_move std_msgs/msg/Float64MultiArray \
-  "{layout: {dim: [{label: right_arm, size: 7, stride: 7}]}, data: [0.0, -78.0, 0.0, 5.0, 0.0, 0.0, 0.0]}"
+  "{layout: {dim: [{label: right_arm, size: 6, stride: 6}]}, data: [0.0, -7.0, 0.0, 5.0, 0.0, 0.0]}"
 ```
 
-## 焊接应用服务
-
-外部应用调用 Capture；视觉节点采集并识别焊缝后，调用 W1 TeachPanel 的 Build 服务完成预检、保存及可选入队。
-
-| 接口                                      | 类型与提供方                                                         | 调用条件                                                                         |
-| ----------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `/weld_vision/capture_and_generate`       | `speedbot_msgs/srv/CaptureWeldProgram`，W1 视觉节点                  | 相机、W1 实测手眼标定、拍照期间静止、新鲜反馈及 `waist_yaw ← right_wrist_yaw` TF |
-| `/teach_mode_panel/build_weld_program_w1` | `speedbot_msgs/srv/BuildWeldProgramW1`，启用焊接模块的 W1 TeachPanel | 有效 TCP；拍照姿态为右臂 7 项 rad；输入几何在 `waist_yaw` 系，点与偏移单位 m     |
-
-| Capture 字段              | 类型/单位    | 含义                                                                                       |
-| ------------------------- | ------------ | ------------------------------------------------------------------------------------------ |
-| 请求 `auto_execute`       | bool         | false：生成并保存；true：保存后入执行队列                                                  |
-| 响应 `success`、`message` | bool、string | 采集、识别、生成结果；自动执行时成功截至入队，不表示焊接已完成                             |
-| 响应 `program_path`       | string       | 成功时是服务端文件系统的程序绝对路径；失败为空                                             |
-| 响应 `weld_length`        | float64，mm  | 最终规划采用的焊缝长度；失败为 0。Build 的 `executed_lengths` 单位是 m，表示规划选用的长度 |
-
-将标定路径换为该 W1 的实测文件，启动视觉节点后，在另一个已加载相同环境的终端调用 Capture。`auto_execute: false` 会拍照并写入程序文件，保留待检查；纯 mock 只能用于端点发现，完整生成依赖相机、标定和面板。
-
-```bash
-ros2 run weld_seam_vision weld_seam_vision_w1_node --ros-args \
-  -p calibration_info:=/path/to/measured_w1_calibration.yml
-# 另一个终端
-ros2 service type /teach_mode_panel/build_weld_program_w1
-ros2 service call /weld_vision/capture_and_generate speedbot_msgs/srv/CaptureWeldProgram \
-  '{auto_execute: false}'
-```
-
-## 验证与排查
-
-本页的隔离通信测试使用独立 ROS 端点验证 `state_reader` 与关节反馈录制器，不启动 W1 mock，也不模拟控制器或硬件。录制器的参数、JSONL 格式和文件行为见 [Python 录制示例](./python-example.md)。
-
-仅验证本仓库只读客户端时，无需 W1 驱动包。加载 Humble、构建并 source 本页的 `w1_docs_ros2` 安装后，从仓库根目录执行：
-
-```bash
-colcon --log-base examples/ros2/log test \
-  --build-base examples/ros2/build --install-base examples/ros2/install \
-  --packages-select w1_docs_ros2 --python-testing pytest
-colcon test-result --test-result-base examples/ros2/build --verbose
-ROS_LOCALHOST_ONLY=1 ROS_DOMAIN_ID=169 python3 examples/ros2/test_cli.py
-```
-
-169 应为本机空闲测试域。CLI 测试只在独立的 remap 端点运行状态发布者和 Trigger 服务替身，覆盖客户端的读取、过滤、校验、超时及服务失败处理。它不启动 W1 控制器，也不代表 W1 硬件、规划器或焊接服务验收。
-
-| 现象                                                                                | 检查项                                                                                                      |
-| ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| 找不到 `ethercat_motor_drive` 或 `speedbot_msgs`                                    | 是否已取得并加载相应 W1 工作区；文档仓库只构建读端                                                          |
-| 看不到话题或服务                                                                    | install、域、localhost、RMW 和 DDS 网络发现；分别用 `ros2 topic list -t`、`ros2 service list -t` 检查提供方 |
-| 反馈超时                                                                            | `JointState` 类型、QoS、目标轴名称、位置数组；只有被动关节的帧会继续等待                                    |
-| PVT 服务发现/响应超时                                                               | 控制器是否启动、服务名称和 remap、服务端执行是否阻塞；检查本次超时所处阶段                                  |
-| 发现 PVT 订阅者仍在等待                                                             | 控制器就绪、令牌、84 项顺序、首帧位置；若已故障先读取原因并等待制动完成                                     |
-| 规划成功但执行时手臂无响应                                                          | 区分只规划、入队、执行；检查双臂 PVT 占用及位置入口条件，核对度与 rad                                       |
-| Humble 的 `ros2 interface show speedbot_msgs/srv/PlanMove` 报 `InvalidResourceName` | 资料记录当前包安装布局可触发 CLI 展开错误；用下面 Python 字段检查和在线服务类型核对                         |
-
-```bash
-python3 -c 'from speedbot_msgs.srv import PlanMove; print(PlanMove.Request.get_fields_and_field_types())'
-ros2 service type /plan_move
-```
+这会提交运动目标。单臂示教话题为 `/left_arm_move` 和 `/right_arm_move`，各接收 6 项。当前默认部署未启用双臂规划服务 `/plan_move` 和焊接轨迹生成服务 `/weld_vision/capture_and_generate`。实际系统中的服务和类型请用 `ros2 service list -t` 查询。

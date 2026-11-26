@@ -38,13 +38,13 @@ Mechanical structure diagram
 
 These are reference values. Measurement conditions and the applicable delivered configuration are not specified here; confirm them against the relevant delivery documentation before selection or deployment.
 
-## 28 controlled axes
+## ROS 2 controlled axes
 
 | Scope                               | Value                                         | Meaning for developers                                                                                          |
 | ----------------------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `speed_W1_v1.2` ROS 2 configuration | 28 controlled axes: 14 legs/waist and 14 arms | The current interface uses this configuration for command order and array lengths; whole-body PVT has 84 values |
+| `speed_W1_v1.2` ROS 2 configuration | 26 controlled axes: 14 legs/waist and 12 arms | The current interface uses this configuration for command order and array lengths; whole-body PVT has 78 values |
 
-For software integration, check the running `robot_model` and `joints` parameters and the installed configuration. The complete 28-axis order and PVT format are in [W1 whole-body control](../api/w1-control.md).
+For software integration, check the running `robot_model` and `joints` parameters and the installed configuration. The complete 26-axis order and PVT format are in [W1 whole-body control](../api/w1-control.md).
 
 ## Application context
 

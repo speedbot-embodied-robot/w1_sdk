@@ -27,13 +27,13 @@ features:
     details: 按已验证的环境完成 SDK 接入，并运行公开示例。
     link: ./sdk/integration
   - title: W1 整机控制
-    details: 查看关节顺序、单位、会话和整机控制限制。
+    details: 查看 26 轴关节顺序、单位和整机控制限制。
     link: ./api/w1-control
 ---
 
 本手册面向 W1 开发者，提供产品信息和软件接入文档。
 
-**资料范围**　产品部分介绍 W1 / Weldroid-W1；ROS 2 部分对应 `speed_W1_v1.2` 的 28 轴接口配置。
+**资料范围**　产品部分介绍 W1 / Weldroid-W1；ROS 2 部分对应正式 `speed_W1_v1.2` 的 26 轴控制接口。
 
 ::: info 资料更新
 至 2026-11-20。
@@ -44,4 +44,3 @@ features:
 - [产品概览](./product/overview.md) · [能力与应用](./product/capabilities.md) · [型号与规格](./product/specifications.md) · [部件与接口](./product/interfaces.md)
 - [SDK 集成](./sdk/integration.md) · [发行说明](./support/releases.md)
 - [W1 ROS 2 示例](./sdk/ros2-example.md) · [W1 整机控制](./api/w1-control.md)
-

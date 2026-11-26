@@ -48,7 +48,7 @@ The first line contains format metadata. Each following line represents one rece
 | `name`                           | Joint-name array                                                                                          |
 | `position`, `velocity`, `effort` | State arrays preserved from the ROS message; unavailable arrays remain empty (`[]`)                       |
 
-Each array uses the corresponding index in `name`. The recorder requires nonempty, unique names; each of `position`, `velocity`, and `effort` may be empty or must match the name-array length, and numeric values must be finite. Missing state arrays remain `[]`; values are not filled with zero or changed to `null`. A message with all three state arrays empty is still preserved. Match values by joint name; do not assume feedback order equals the 28-joint command order. Metadata documents units for revolute and prismatic joints. The message does not carry joint type, so interpret values using the actual robot model. The publisher supplies `header.stamp`; it may be zero. This tool does not validate timestamp freshness or detect loss upstream or in DDS; it records only messages that reach this node.
+Each array uses the corresponding index in `name`. The recorder requires nonempty, unique names; each of `position`, `velocity`, and `effort` may be empty or must match the name-array length, and numeric values must be finite. Missing state arrays remain `[]`; values are not filled with zero or changed to `null`. A message with all three state arrays empty is still preserved. Match values by joint name; do not assume feedback order equals the 26-joint command order. Metadata documents units for revolute and prismatic joints. The message does not carry joint type, so interpret values using the actual robot model. The publisher supplies `header.stamp`; it may be zero. This tool does not validate timestamp freshness or detect loss upstream or in DDS; it records only messages that reach this node.
 
 The subscription uses ROS 2 Humble's `qos_profile_sensor_data` (`BEST_EFFORT`, `VOLATILE`, `KEEP_LAST`, depth 5) and must be QoS-compatible with the publisher. This profile does not guarantee lossless delivery, so the output should not be treated as a complete, lossless controller log.
 
@@ -74,11 +74,11 @@ Recorder source:
 | `4`       | Recording-queue or file I/O error, including failure to create, write, or flush the file |
 | `130`     | Ctrl+C; received records are flushed to the file when possible                           |
 
-This tool stores ROS state. It does not check controller readiness, verify feedback freshness, or establish that the robot can move safely. To read one named joint and query PVT status, use the [ROS 2 state reader](./ros2-example.md#read-only-node-joint-feedback-and-pvt-status).
+This tool stores ROS state. It does not check controller readiness, verify feedback freshness, or establish that the robot can move safely. For joint and IMU state, motor diagnostics, and control-array formats, see the [W1 ROS 2 examples](./ros2-example.md).
 
 ## Isolated tests
 
-The repository's isolated ROS tests use a local publisher to check the read-only state client and recorder file output; `state_reader` tests also use a Trigger service substitute. They do not connect to a W1 controller. Recorder coverage includes multi-frame JSONL, remapped-topic metadata, array preservation, no-data timeouts, first messages before and after the idle deadline, refusal to overwrite, invalid frames and flushing on interruption. After building the package, run from the repository root:
+The repository's isolated ROS tests use a local publisher to check the read-only state client and recorder file output. `state_reader` reads one named joint and does not depend on a control service. They do not connect to a W1 controller. Recorder coverage includes multi-frame JSONL, remapped-topic metadata, array preservation, no-data timeouts, first messages before and after the idle deadline, refusal to overwrite, invalid frames and flushing on interruption. After building the package, run from the repository root:
 
 ```bash
 ROS_LOCALHOST_ONLY=1 ROS_DOMAIN_ID=169 python3 examples/ros2/test_cli.py

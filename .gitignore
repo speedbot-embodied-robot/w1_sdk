@@ -31,3 +31,4 @@ __pycache__/
 .vscode
 # Local daily reports
 /engineering/DAILY_REPORT_*.md
+/update/

@@ -1,122 +1,110 @@
-# W1 whole-body control interfaces
+# W1 Whole-Body Control Interface
 
-This reference applies to `speed_W1_v1.2`: 28 controlled joints, two seven-axis arms, and ROS 2 Humble. It combines the W1 communication guide with the whole-body interface guide, using the current W1 arm PVT interpolation contract. See the [ROS 2 example](../sdk/ros2-example.md) for startup, a read-only node, and Planner, Teach and welding service calls.
+This page applies to the current official ROS 2 control configuration, `speed_W1_v1.2`, with ROS 2 Humble. The configuration has 26 controlled joints, with six axes on each arm. Joint order, message fields, and upper-level interfaces follow the current public interface documentation.
 
-The 28 joints on this page refer to that interface configuration. Its relationship to the product reference value of 27 degrees of freedom remains unconfirmed; see [Models and specifications](../product/specifications.md).
+## Verify the configuration
 
-## Model and configuration
-
-| Item                   | W1 configuration                                                          |
-| ---------------------- | ------------------------------------------------------------------------- |
-| Driver package         | `ethercat_motor_drive`                                                    |
-| Launch file            | `motor_drive-speed_W1_v1_2.launch.py`                                     |
-| Model parameter        | `robot_model` on `/mit_controller`: `speed_W1_v1.2`                       |
-| Configuration          | `config/controllers-speed_W1_v1_2.yaml` under the package share directory |
-| Joint count            | 28 total; 14 legs/waist; 14 arms                                          |
-| Controller update rate | 500 Hz                                                                    |
-| Default PVT input      | 100 Hz; interpolation applies only to arm position and velocity           |
-
-The W1 workspace supplies configuration, drivers and trajectory resources. They are not included in this documentation repository. After sourcing that workspace's `install/setup.bash`, inspect the installed package and active parameters:
+After sourcing the corresponding ROS 2 environment, inspect controller status and the runtime joint order:
 
 ```bash
-ros2 pkg prefix --share ethercat_motor_drive
-ros2 param get /mit_controller robot_model
-ros2 param get /mit_controller joints
 ros2 control list_controllers -c /controller_manager
+ros2 param get /mit_controller joints
 ```
 
-Interpolation enablement and nominal period are read during controller initialization. A 50 Hz source requires a matching 0.02 s period configuration and a controller reload; it cannot simply use the default 100 Hz configuration. Other models' 25/26-joint arrays do not apply to this 28-joint W1.
+The active controllers should include `joint_state_broadcaster` and `mit_controller`. The runtime `joints` list should match the 26-axis order below.
 
-## Command topics and blocks
+## Command topics
 
-All five endpoints use `std_msgs/msg/Float64MultiArray`, subscription depth 10 and default reliable delivery. Positions are absolute joint angles. `+` means concatenating complete blocks, not interleaving fields per joint.
+All five low-level command inputs use `std_msgs/msg/Float64MultiArray`, with a subscription depth of 10 and reliable delivery by default. Position values are absolute joint angles. The controller update rate is 500 Hz.
 
-| Topic                                   | `data`                                               | Default W1 restrictions                                                                                                          |
-| --------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `/rl_motion_control_command_pvt`        | 84 values: q + qd + τff                              | Whole-body streaming input; every frame needs a token after session reset                                                        |
-| `/rl_motion_control_command`            | 28 whole-body q values; also accepts 12 leg q values | The 28-value form covers selected arm joints and is rejected; the 12-value form excludes waist and arms                          |
-| `/rl_motion_control_command_with_kp_kd` | 84 values: q + kp + kd                               | Covers both arms; requires arm PVT interpolation to be disabled                                                                  |
-| `/lower_body_joint_position_command`    | 14 values: legs + waist q                            | Separate leg/waist control; held until the first valid PVT frame of a new session                                                |
-| `/arm_joint_position_command_165`       | 14 values: left arm 7 + right arm 7, q               | `_165` is a historical suffix; Teach/Planner position execution through this input requires arm PVT interpolation to be disabled |
+| Topic                                   | Message data                                 | Purpose                                                                               |
+| --------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `/rl_motion_control_command_pvt`        | 78 values: 26 q, 26 qd, 26 τff               | Whole-body position, velocity, and joint-side torque feedforward                      |
+| `/rl_motion_control_command`            | 26 whole-body q values, or 12 leg q values   | The 12-value form updates only the legs. Waist and arms retain their existing targets |
+| `/rl_motion_control_command_with_kp_kd` | 78 values: 26 q, 26 kp, 26 kd                | Whole-body position and per-joint gains                                               |
+| `/lower_body_joint_position_command`    | 14 values: legs and waist q                  | Updates leg and waist positions                                                       |
+| `/arm_joint_position_command_165`       | 12 values: 6 left-arm and 6 right-arm values | Updates both arm positions. The topic suffix is a historical name                     |
 
-| Block         | PVT                 | P+KP+KD       |
-| ------------- | ------------------- | ------------- |
-| `data[0:28]`  | q, rad              | q, rad        |
-| `data[28:56]` | qd, rad/s           | kp, N·m/rad   |
-| `data[56:84]` | τff, joint-side N·m | kd, N·m·s/rad |
+`q` is in rad, `qd` in rad/s, `τff` in N·m, `kp` in N·m/rad, and `kd` in N·m·s/rad. The three blocks are concatenated in sequence, not interleaved per joint. Ordinary position messages use the default empty `layout`. Only `/rl_motion_control_command_with_kp_kd` takes `kp` and `kd` from the message. Other position and PVT inputs use the configured gains. After a position frame is accepted, velocity and feedforward targets for the joints covered by that frame are set to zero.
 
-Each block uses the 28-joint order below and must contain finite values. There is no combined 5N-value P/V/T/KP/KD input. P and P+KP+KD clear V/T for the joints they control; P/PVT use YAML KP/KD values; group position commands preserve other joints' targets. These data semantics do not bypass the default arm interpolation restrictions.
+## 26-axis command order
 
-The caller handles action scaling, initial offsets, unit conversion, joint reordering and model limits. The driver handles motor direction, gear ratios and parallel-ankle conversion. Multiple topics may write the same joints, so use one active command source per replay.
+Indices are zero-based. The three blocks in PVT and gain messages use the same order. The order of feedback in `/joint_states` may differ, so match feedback by joint name.
 
-## 28-joint order and Home
+| Index | Joint name                   |
+| ----: | ---------------------------- |
+|     0 | `left_hip_pitch_joint`       |
+|     1 | `left_hip_roll_joint`        |
+|     2 | `left_hip_yaw_joint`         |
+|     3 | `left_knee_joint`            |
+|     4 | `left_ankle_pitch_joint`     |
+|     5 | `left_ankle_roll_joint`      |
+|     6 | `right_hip_pitch_joint`      |
+|     7 | `right_hip_roll_joint`       |
+|     8 | `right_hip_yaw_joint`        |
+|     9 | `right_knee_joint`           |
+|    10 | `right_ankle_pitch_joint`    |
+|    11 | `right_ankle_roll_joint`     |
+|    12 | `waist_yaw_joint`            |
+|    13 | `waist_pitch_joint`          |
+|    14 | `left_shoulder_pitch_joint`  |
+|    15 | `left_shoulder_roll_joint`   |
+|    16 | `left_shoulder_yaw_joint`    |
+|    17 | `left_elbow_joint`           |
+|    18 | `left_wrist_yaw_joint`       |
+|    19 | `left_wrist_pitch_joint`     |
+|    20 | `right_shoulder_pitch_joint` |
+|    21 | `right_shoulder_roll_joint`  |
+|    22 | `right_shoulder_yaw_joint`   |
+|    23 | `right_elbow_joint`          |
+|    24 | `right_wrist_yaw_joint`      |
+|    25 | `right_wrist_pitch_joint`    |
 
-Indices are zero-based. All three PVT or gain blocks reuse this order. Extract `/joint_states` feedback by name; its array order need not match command order.
+Left and right refer to the robot's own sides. Positive directions follow the corresponding joint axis in the URDF and the right-hand rule. Passive toe joints may appear in state feedback, but they are not part of these 26 control-array entries.
 
-| Index | Joint name                   | Home (rad) |
-| ----- | ---------------------------- | ---------- |
-| 0     | `left_hip_pitch_joint`       | 0          |
-| 1     | `left_hip_roll_joint`        | 0          |
-| 2     | `left_hip_yaw_joint`         | 0          |
-| 3     | `left_knee_joint`            | 0          |
-| 4     | `left_ankle_pitch_joint`     | 0          |
-| 5     | `left_ankle_roll_joint`      | 0          |
-| 6     | `right_hip_pitch_joint`      | 0          |
-| 7     | `right_hip_roll_joint`       | 0          |
-| 8     | `right_hip_yaw_joint`        | 0          |
-| 9     | `right_knee_joint`           | 0          |
-| 10    | `right_ankle_pitch_joint`    | 0          |
-| 11    | `right_ankle_roll_joint`     | 0          |
-| 12    | `waist_yaw_joint`            | 0          |
-| 13    | `waist_pitch_joint`          | 0          |
-| 14    | `left_shoulder_pitch_joint`  | 0          |
-| 15    | `left_shoulder_roll_joint`   | -1.36      |
-| 16    | `left_shoulder_yaw_joint`    | 0          |
-| 17    | `left_elbow_joint`           | 0          |
-| 18    | `left_wrist_roll_joint`      | 0          |
-| 19    | `left_wrist_yaw_joint`       | 0          |
-| 20    | `left_wrist_pitch_joint`     | 0          |
-| 21    | `right_shoulder_pitch_joint` | 0          |
-| 22    | `right_shoulder_roll_joint`  | -1.36      |
-| 23    | `right_shoulder_yaw_joint`   | 0          |
-| 24    | `right_elbow_joint`          | 0          |
-| 25    | `right_wrist_roll_joint`     | 0          |
-| 26    | `right_wrist_yaw_joint`      | 0          |
-| 27    | `right_wrist_pitch_joint`    | 0          |
+### PVT data layout
 
-Home comes from `init_state.default_joint_angle` and matches RViz Home for the same launch. With `hold_current_state_on_activate: true`, activation holds measured positions; it **does not move automatically to Home**. Transition smoothly from current feedback to the desired policy initial pose. Check the installed YAML and live `joints` parameter at the deployment site.
+| Index range   | Field                             | Unit  |
+| ------------- | --------------------------------- | ----- |
+| `data[0:26]`  | Whole-body position q             | rad   |
+| `data[26:52]` | Whole-body velocity qd            | rad/s |
+| `data[52:78]` | Whole-body torque feedforward τff | N·m   |
 
-## PVT session token and first frame
+On the real robot, the legs support torque feedforward. The waist and arms use position control, so their feedforward entries should be zero. The right knee has command index 9, so its position, velocity, and feedforward entries are `data[9]`, `data[35]`, and `data[61]`, respectively.
 
-After reset, a PVT message needs **exactly one** `layout.dim` entry. Its `label` must exactly match the token returned by reset; the W1 replayer also sets `size=84, stride=84`. Frames with old or missing tokens are ignored. Do not use the generic array-message assumption that layout may be omitted.
+### Position-array coverage
 
-All three services are under `/mit_controller/` and use `std_srvs/srv/Trigger`. Requests are empty; responses contain `bool success` and `string message`.
+`/rl_motion_control_command` accepts 26 whole-body position values or 12 leg position values. The 12-value array contains only the left and right legs, without the waist or arms.
 
-| Service                        | Purpose                                          | Response handling                                                                                                                                                                                |
-| ------------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `get_pvt_interpolation_status` | Query state                                      | `waiting` awaits the first frame; `buffering/running/holding` are stream states; `fault_braking/fault` include a reason; `disabled/inactive/resetting` require waiting or checking configuration |
-| `reset_pvt_interpolation`      | Request a new session in a resettable state      | On success, `message` is the token; poll until `success=true, message=waiting` before sending the first frame                                                                                    |
-| `stop_pvt_interpolation`       | Request braking on selected interpolation joints | `success=true` only acknowledges the request; continue querying until `stopped` or `fault`                                                                                                       |
+`/lower_body_joint_position_command` uses indices 0–13 for both legs and the waist. `/arm_joint_position_command_165` contains the left arm at indices 14–19, followed by the right arm at indices 20–25.
 
-A session proceeds as follows:
+Before publishing, check array length, finite values, joint order, and target ranges. Do not assume feedback arrays use the command order. Multiple command topics may write to the same joints, so use one active command input for a control task.
 
-1. Check controller readiness and stable feedback, call reset, and retain the returned token.
-2. Wait for `waiting`, then start from the held position with zero first-frame velocity and feedforward. The default first-frame position tolerance on selected joints is 0.001 rad.
-3. Publish 84 values at the default 100 Hz, carrying the same token on every frame.
-4. Call stop and query the final state. This service affects only interpolation joints; whole-robot emergency stop uses the device's own mechanism.
+## Bilateral arm teaching interface
 
-The W1 package's `docs/examples/trajtest_w1_horizontal400.sh` implements feedback checks, transitions, token handling and stopping. See the [ROS 2 example](../sdk/ros2-example.md#pvt-commands-and-replay) for prerequisites and offline checks.
+The W1 teaching panel receives joint targets on `/arm_move` in degrees. A single-arm target has six values. A dual-arm target has 12 values, with the left arm first. The teaching panel publishes 12 arm position targets in radians through `/arm_joint_position_command_165`.
 
-## Hardware mapping and feedback
+| Topic                               | Type                             | Data format                                                                                                                                                       |
+| ----------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/arm_move`                         | `std_msgs/msg/Float64MultiArray` | Six values for one arm, with `layout.dim[].label` set to `left_arm` or `right_arm`. Twelve values for both arms, with the left arm first and the `dual_arm` label |
+| `/left_arm_move`, `/right_arm_move` | `std_msgs/msg/Float64MultiArray` | Legacy single-arm topics, six values per side                                                                                                                     |
 
-Current W1 leg drivers map τff feedforward. Waist TI CSP and arm HSA CSP **do not send that feedforward cyclically**. A field binding in a generic control structure does not establish cyclic support in every driver. `tau_ff=0` does not mean measured motor torque is zero, and mock operation does not validate physical motor behavior.
+The following example submits a right-arm target to a system with the teaching panel loaded:
 
-Select controlled joints by name in `/joint_states`; ignore extra passive joints or frames containing only passive joints. The physical meaning of `effort` depends on driver mapping, so not every reported value represents measured torque. Check joint ownership, temperatures, error codes and bus health through dynamic joint state and diagnostic topics; see [state interfaces](../sdk/ros2-example.md#state-interfaces).
+```bash
+ros2 topic info /arm_move -v
+ros2 topic pub --once /arm_move std_msgs/msg/Float64MultiArray \
+  "{layout: {dim: [{label: right_arm, size: 6, stride: 6}]}, data: [0.0, -7.0, 0.0, 5.0, 0.0, 0.0]}"
+```
 
-Readiness includes an active controller and driver handover. The W1 startup gate logs `MIT first commands accepted by all configured drive plugins` after all configured axes are taken over. Check bus OK status and per-axis ownership separately.
+Publishing to this topic submits a motion target. Confirm that the connection is to the intended simulated or robot system and that the target matches the device configuration.
 
-## Sources and scope
+## Service availability
 
-The W1-specific guide takes precedence over generic or historical descriptions: this page uses current 100 Hz arm interpolation, session tokens and hardware feedforward mapping, rather than older 50/500 Hz replay conditions without interpolation.
+The default deployment provides bilateral arm teaching. The dual-arm planning service `/plan_move` and weld-program generation service `/weld_vision/capture_and_generate` are disabled by default. To inspect the services and types available on a connected system, run:
 
-The W1 installation should include YAML, replay scripts and trajectories under `docs/examples/`, and replay dependencies. Rebuild that workspace after configuration or data changes to update installed copies. Driver sources, trajectory data and calibration files not supplied with these documents are not provided here. Exact software revisions and firmware versions remain to be recorded with a release.
+```bash
+ros2 service list -t
+```
+
+For state topics, message fields, QoS, and examples, see [W1 ROS 2 Interface Examples](../sdk/ros2-example.md).
